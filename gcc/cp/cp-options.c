@@ -18,8 +18,14 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-DEFINE_LANG_NAME ("C++")
-     
+#include "config.h"
+#include "options.h"
+
+struct lang_opt documented_lang_options[] = {
+  #include "common-options.c"
+
+  DEFINE_LANG_NAME("C++")
+
 /* This is the contribution to the `lang_options' array in gcc.c for
    g++.  */
 
@@ -135,3 +141,5 @@ DEFINE_LANG_NAME ("C++")
   { "-Wnon-template-friend", "" }, 
   { "-Wno-non-template-friend", "Don't warn when non-templatized friend functions are declared within a template" },
 
+  { NULL, NULL } /* end */
+};

@@ -29,7 +29,7 @@ Boston, MA 02111-1307, USA.  */
    with all memory management; the functions in this file will not free
    the char*s returned.  See error.c for an example use of this code.  */
 
-typedef char* cp_printer PROTO((tree, int));
+typedef char* cp_printer (tree, int);
 extern cp_printer * cp_printers[256];
 
 /* Whether or not we should try to be quiet for errors and warnings; this is
@@ -39,8 +39,8 @@ int cp_silent = 0;
 
 typedef void errorfn ();	/* deliberately vague */
 
-extern char* cp_file_of PROTO((tree));
-extern int   cp_line_of PROTO((tree));
+extern char* cp_file_of (tree);
+extern int   cp_line_of (tree);
 
 #define STRDUP(f) (ap = (char *) alloca (strlen (f) +1), strcpy (ap, (f)), ap)
 
@@ -190,57 +190,30 @@ cp_thing (errfn, atarg1, format, ap)
 }
 
 void
-cp_error VPROTO((const char *format, ...))
+cp_error (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) error, 0, format, ap);
   va_end (ap);
 }
 
 void
-cp_warning VPROTO((const char *format, ...))
+cp_warning (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) warning, 0, format, ap);
   va_end (ap);
 }
 
 void
-cp_pedwarn VPROTO((const char *format, ...))
+cp_pedwarn (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) pedwarn, 0, format, ap);
   va_end (ap);
@@ -249,94 +222,49 @@ cp_pedwarn VPROTO((const char *format, ...))
 extern errorfn compiler_error;
 
 void
-cp_compiler_error VPROTO((const char *format, ...))
+cp_compiler_error (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing (compiler_error, 0, format, ap);
   va_end (ap);
 }
 
 void
-cp_sprintf VPROTO((const char *format, ...))
+cp_sprintf (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   cp_thing ((errorfn *) sprintf, 0, format, ap);
   va_end (ap);
 }
 
 void
-cp_error_at VPROTO((const char *format, ...))
+cp_error_at (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) error_with_file_and_line, 1, format, ap);
   va_end (ap);
 }
 
 void
-cp_warning_at VPROTO((const char *format, ...))
+cp_warning_at (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) warning_with_file_and_line, 1, format, ap);
   va_end (ap);
 }
 
 void
-cp_pedwarn_at VPROTO((const char *format, ...))
+cp_pedwarn_at (const char *format, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  char *format;
-#endif
   va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, char *);
-#endif
-
+  va_start (ap, format);
   if (! cp_silent)
     cp_thing ((errorfn *) pedwarn_with_file_and_line, 1, format, ap);
   va_end (ap);

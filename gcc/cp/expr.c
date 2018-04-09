@@ -29,12 +29,7 @@ Boston, MA 02111-1307, USA.  */
 #include "cp-tree.h"
 #include "toplev.h"
 
-#if 0
-static tree extract_aggr_init PROTO((tree, tree));
-static tree extract_scalar_init PROTO((tree, tree));
-#endif
-static rtx cplus_expand_expr PROTO((tree, rtx, enum machine_mode,
-				    enum expand_modifier));
+static rtx cplus_expand_expr (tree, rtx, enum machine_mode, enum expand_modifier);
 
 /* Hook used by expand_expr to expand language-specific tree codes.  */
 

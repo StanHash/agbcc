@@ -209,6 +209,21 @@ extern void assemble_alias		(tree, tree);
    for an `asm' keyword used between functions.  */
 extern void assemble_asm		(tree);
 
+/* Record an element in the table of global destructors.
+   How this is done depends on what sort of assembler and linker
+   are in use.
+
+   NAME should be the name of a global function to be called
+   at exit time.  This name is output using assemble_name.  */
+extern void assemble_destructor		(char *);
+
+/* Likewise for global constructors.  */
+extern void assemble_constructor	(char *);
+
+/* Likewise for entries we want to record for garbage collection.
+   Garbage collection is still under development.  */
+extern void assemble_gc_entry		(char *);
+
 /* Output assembler code for the constant pool of a function and associated
    with defining the name of the function.  DECL describes the function.
    NAME is the function's name.  For the constant pool, we use the current
@@ -470,3 +485,6 @@ extern FILE *rtl_dump_file;
    && (DECL_INITIAL (DECL) == error_mark_node		\
        || TREE_CONSTANT (DECL_INITIAL (DECL)))		\
    && ! (RELOC && (DECL_ONE_ONLY (DECL))))
+
+/* User label prefix in effect for this compilation.  */
+extern char *user_label_prefix;

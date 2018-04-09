@@ -45,22 +45,21 @@ extern void compiler_error ();
    line.  Perhaps this was not intended.  */
 tree current_base_init_list, current_member_init_list;
 
-static void expand_aggr_vbase_init_1 PROTO((tree, tree, tree, tree));
-static void expand_aggr_vbase_init PROTO((tree, tree, tree, tree));
-static void expand_aggr_init_1 PROTO((tree, tree, tree, tree, int));
-static void expand_default_init PROTO((tree, tree, tree, tree, int));
-static tree build_vec_delete_1 PROTO((tree, tree, tree, tree, tree,
-				      int));
-static void perform_member_init PROTO((tree, tree, tree, int));
-static void sort_base_init PROTO((tree, tree *, tree *));
-static tree build_builtin_delete_call PROTO((tree));
-static int member_init_ok_or_else PROTO((tree, tree, char *));
-static void expand_virtual_init PROTO((tree, tree));
-static tree sort_member_init PROTO((tree));
-static tree build_partial_cleanup_for PROTO((tree));
-static tree initializing_context PROTO((tree));
-static void expand_vec_init_try_block PROTO((tree));
-static void expand_vec_init_catch_clause PROTO((tree, tree, tree, tree));
+static void expand_aggr_vbase_init_1 (tree, tree, tree, tree);
+static void expand_aggr_vbase_init (tree, tree, tree, tree);
+static void expand_aggr_init_1 (tree, tree, tree, tree, int);
+static void expand_default_init (tree, tree, tree, tree, int);
+static tree build_vec_delete_1 (tree, tree, tree, tree, tree, int);
+static void perform_member_init (tree, tree, tree, int);
+static void sort_base_init (tree, tree *, tree *);
+static tree build_builtin_delete_call (tree);
+static int member_init_ok_or_else (tree, tree, char *);
+static void expand_virtual_init (tree, tree);
+static tree sort_member_init (tree);
+static tree build_partial_cleanup_for (tree);
+static tree initializing_context (tree);
+static void expand_vec_init_try_block (tree);
+static void expand_vec_init_catch_clause (tree, tree, tree, tree);
 
 /* Cache the identifier nodes for the magic field of a new cookie.  */
 static tree nc_nelts_field_id;
@@ -587,7 +586,7 @@ emit_base_init (t, immediately)
 
 	  member = convert_pointer_to_real (base_binfo, current_class_ptr);
 	  expand_aggr_init_1 (base_binfo, NULL_TREE,
-			      build_indirect_ref (member, NULL_PTR), init,
+			      build_indirect_ref (member, NULL), init,
 			      LOOKUP_NORMAL);
 
 	  expand_end_target_temps ();
@@ -758,7 +757,7 @@ expand_virtual_init (binfo, decl)
   TREE_USED (vtbl) = 1;
   vtbl = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (vtbl)), vtbl);
   decl = convert_pointer_to_real (vtype_binfo, decl);
-  vtbl_ptr = build_vfield_ref (build_indirect_ref (decl, NULL_PTR), vtype);
+  vtbl_ptr = build_vfield_ref (build_indirect_ref (decl, NULL), vtype);
   if (vtbl_ptr == error_mark_node)
     return;
 
@@ -776,7 +775,7 @@ expand_aggr_vbase_init_1 (binfo, exp, addr, init_list)
      tree binfo, exp, addr, init_list;
 {
   tree init = purpose_member (binfo, init_list);
-  tree ref = build_indirect_ref (addr, NULL_PTR);
+  tree ref = build_indirect_ref (addr, NULL);
 
   expand_start_target_temps ();
 
@@ -1430,7 +1429,7 @@ build_member_call (type, name, parmlist)
 	{
 	  tree newtype = build_qualified_type (type, TYPE_QUALS (oldtype));
 	  decl = convert_force (build_pointer_type (newtype), olddecl, 0);
-	  decl = build_indirect_ref (decl, NULL_PTR);
+	  decl = build_indirect_ref (decl, NULL);
 	}
     }
 
@@ -1788,7 +1787,7 @@ resolve_offset_ref (exp)
 	 COMPONENT_REF; that will allow better error recovery than
 	 just feeding back error_mark_node.  */
       expr = build (COMPONENT_REF, TREE_TYPE (member),
-		    build_indirect_ref (addr, NULL_PTR), member);
+		    build_indirect_ref (addr, NULL), member);
       return convert_from_reference (expr);
     }
 
@@ -2115,7 +2114,7 @@ build_java_class_ref (type)
       DECL_ARTIFICIAL (class_decl) = 1;
       DECL_IGNORED_P (class_decl) = 1;
       pushdecl_top_level (class_decl);
-      make_decl_rtl (class_decl, NULL_PTR, 1);
+      make_decl_rtl (class_decl, NULL, 1);
       pop_obstacks ();
     }
   return class_decl;
@@ -2314,7 +2313,7 @@ build_new_1 (exp)
       /* Store header info.  */
       cookie = build_indirect_ref (build (MINUS_EXPR,
 					  build_pointer_type (BI_header_type),
-					  rval, extra), NULL_PTR);
+					  rval, extra), NULL);
       exp1 = build (MODIFY_EXPR, void_type_node,
 		    build_component_ref (cookie, nc_nelts_field_id,
 					 NULL_TREE, 0),
@@ -2347,7 +2346,7 @@ build_new_1 (exp)
 	     the value from the call to `operator new'.  We transform
 	     it to (*RVAL = INIT, RVAL).  */
 	  rval = save_expr (rval);
-	  deref = build_indirect_ref (rval, NULL_PTR);
+	  deref = build_indirect_ref (rval, NULL);
 
 	  /* Even for something like `new const int (10)' we must
 	     allow the expression to be non-const while we do the
@@ -2396,7 +2395,7 @@ build_new_1 (exp)
 	  newrval = rval;
 
 	  if (newrval && TREE_CODE (TREE_TYPE (newrval)) == POINTER_TYPE)
-	    newrval = build_indirect_ref (newrval, NULL_PTR);
+	    newrval = build_indirect_ref (newrval, NULL);
 
 	  newrval = build_method_call (newrval, ctor_identifier,
 				       init, TYPE_BINFO (true_type), flags);
@@ -3028,7 +3027,7 @@ build_delete (type, addr, auto_delete, flags, use_global_delete)
 
       /* throw away const and volatile on target type of addr */
       addr = convert_force (build_pointer_type (type), addr, 0);
-      ref = build_indirect_ref (addr, NULL_PTR);
+      ref = build_indirect_ref (addr, NULL);
     }
   else if (TREE_CODE (type) == ARRAY_TYPE)
     {
@@ -3058,7 +3057,7 @@ build_delete (type, addr, auto_delete, flags, use_global_delete)
       else
 	addr = convert_force (build_pointer_type (type), addr, 0);
 
-      ref = build_indirect_ref (addr, NULL_PTR);
+      ref = build_indirect_ref (addr, NULL);
     }
 
   my_friendly_assert (IS_AGGR_TYPE (type), 220);
@@ -3272,7 +3271,7 @@ build_vec_delete (base, maxindex, auto_delete_vec, auto_delete,
       /* Step back one from start of vector, and read dimension.  */
       tree cookie_addr = build (MINUS_EXPR, build_pointer_type (BI_header_type),
 				base, BI_header_size);
-      tree cookie = build_indirect_ref (cookie_addr, NULL_PTR);
+      tree cookie = build_indirect_ref (cookie_addr, NULL);
       maxindex = build_component_ref (cookie, nc_nelts_field_id, NULL_TREE, 0);
       do
 	type = TREE_TYPE (type);

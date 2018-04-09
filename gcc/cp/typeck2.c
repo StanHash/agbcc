@@ -37,7 +37,7 @@ Boston, MA 02111-1307, USA.  */
 #include "flags.h"
 #include "toplev.h"
 
-static tree process_init_constructor PROTO((tree, tree, tree *));
+static tree process_init_constructor (tree, tree, tree *);
 
 extern int errorcount;
 extern int sorrycount;
@@ -1322,7 +1322,7 @@ build_x_arrow (datum)
     return last_rval;
 
   if (TREE_CODE (TREE_TYPE (last_rval)) == POINTER_TYPE)
-    return build_indirect_ref (last_rval, NULL_PTR);
+    return build_indirect_ref (last_rval, NULL);
 
   if (types_memoized)
     error ("result of `operator->()' yields non-pointer result");

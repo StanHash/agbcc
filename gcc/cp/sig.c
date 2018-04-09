@@ -35,20 +35,20 @@ extern struct obstack *saveable_obstack;
 
 extern void compiler_error ();
 
-static tree save_this PROTO((tree));
-static tree build_sptr_ref PROTO((tree));
-static tree build_member_function_pointer PROTO((tree));
-static void undo_casts PROTO((tree));
+static tree save_this (tree);
+static tree build_sptr_ref (tree);
+static tree build_member_function_pointer (tree);
+static void undo_casts (tree);
 static tree build_signature_pointer_or_reference_name
-	PROTO((tree, int, int));
+	(tree, int, int);
 static void build_signature_pointer_or_reference_decl
-	PROTO((tree, tree));
+	(tree, tree);
 static tree build_signature_pointer_or_reference_type 
-	PROTO((tree, int, int));
-static tree get_sigtable_name PROTO((tree, tree));
-static tree build_signature_table_constructor PROTO((tree, tree));
-static int match_method_types PROTO((tree, tree));
-static tree build_sigtable PROTO((tree, tree, tree));
+	(tree, int, int);
+static tree get_sigtable_name (tree, tree);
+static tree build_signature_table_constructor (tree, tree);
+static int match_method_types (tree, tree);
+static tree build_sigtable (tree, tree, tree);
 
 /* Used to help generate globally unique names for signature tables.  */
 
@@ -994,8 +994,8 @@ build_signature_method_call (function, parms)
 		    build_pointer_type (build_pointer_type (vtbl_type_node)),
 		    cp_convert (ptrdiff_type_node, object_ptr),
 		    cp_convert (ptrdiff_type_node, vt_off));
-      vtbl = build_indirect_ref (build_indirect_ref (vfld, NULL_PTR),
-				 NULL_PTR);
+      vtbl = build_indirect_ref (build_indirect_ref (vfld, NULL),
+				 NULL);
       aref = build_array_ref (vtbl, idx);
 
       if (flag_vtable_thunks)

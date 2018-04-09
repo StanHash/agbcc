@@ -76,57 +76,57 @@ pop_stack_level (stack)
 #define search_level stack_level
 static struct search_level *search_stack;
 
-static tree get_abstract_virtuals_1 PROTO((tree, int, tree));
-static tree get_vbase_1 PROTO((tree, tree, unsigned int *));
-static tree convert_pointer_to_vbase PROTO((tree, tree));
-static tree lookup_field_1 PROTO((tree, tree));
-static tree convert_pointer_to_single_level PROTO((tree, tree));
-static int lookup_fnfields_1 PROTO((tree, tree));
-static int lookup_fnfields_here PROTO((tree, tree));
-static int is_subobject_of_p PROTO((tree, tree));
-static int hides PROTO((tree, tree));
-static tree virtual_context PROTO((tree, tree, tree));
+static tree get_abstract_virtuals_1 (tree, int, tree);
+static tree get_vbase_1 (tree, tree, unsigned int *);
+static tree convert_pointer_to_vbase (tree, tree);
+static tree lookup_field_1 (tree, tree);
+static tree convert_pointer_to_single_level (tree, tree);
+static int lookup_fnfields_1 (tree, tree);
+static int lookup_fnfields_here (tree, tree);
+static int is_subobject_of_p (tree, tree);
+static int hides (tree, tree);
+static tree virtual_context (tree, tree, tree);
 static tree get_template_base_recursive
-	PROTO((tree, tree, tree, int));
-static void dfs_walk PROTO((tree, void (*) (tree), int (*) (tree)));
-static void dfs_check_overlap PROTO((tree));
-static int dfs_no_overlap_yet PROTO((tree));
-static void envelope_add_decl PROTO((tree, tree, tree *));
+	(tree, tree, tree, int);
+static void dfs_walk (tree, void (*) (tree), int (*) (tree));
+static void dfs_check_overlap (tree);
+static int dfs_no_overlap_yet (tree);
+static void envelope_add_decl (tree, tree, tree *);
 static int get_base_distance_recursive
-	PROTO((tree, int, int, int, int *, tree *, tree,
-	       int, int *, int, int));
+	(tree, int, int, int, int *, tree *, tree,
+	       int, int *, int, int);
 static void expand_upcast_fixups 
-	PROTO((tree, tree, tree, tree, tree, tree, tree *));
+	(tree, tree, tree, tree, tree, tree, tree *);
 static void fixup_virtual_upcast_offsets
-	PROTO((tree, tree, int, int, tree, tree, tree, tree,
-	       tree *));
-static int markedp PROTO((tree));
-static int unmarkedp PROTO((tree));
-static int marked_vtable_pathp PROTO((tree));
-static int unmarked_vtable_pathp PROTO((tree));
-static int marked_new_vtablep PROTO((tree));
-static int unmarked_new_vtablep PROTO((tree));
-static int dfs_debug_unmarkedp PROTO((tree));
-static void dfs_debug_mark PROTO((tree));
-static void dfs_find_vbases PROTO((tree));
-static void dfs_clear_vbase_slots PROTO((tree));
-static void dfs_unmark PROTO((tree));
-static void dfs_init_vbase_pointers PROTO((tree));
-static void dfs_get_vbase_types PROTO((tree));
-static void dfs_pushdecls PROTO((tree));
-static void dfs_compress_decls PROTO((tree));
-static void dfs_unuse_fields PROTO((tree));
-static tree add_conversions PROTO((tree));
-static tree get_virtuals_named_this PROTO((tree));
-static tree get_virtual_destructor PROTO((tree));
-static int tree_has_any_destructor_p PROTO((tree));
-static int covariant_return_p PROTO((tree, tree));
+	(tree, tree, int, int, tree, tree, tree, tree,
+	       tree *);
+static int markedp (tree);
+static int unmarkedp (tree);
+static int marked_vtable_pathp (tree);
+static int unmarked_vtable_pathp (tree);
+static int marked_new_vtablep (tree);
+static int unmarked_new_vtablep (tree);
+static int dfs_debug_unmarkedp (tree);
+static void dfs_debug_mark (tree);
+static void dfs_find_vbases (tree);
+static void dfs_clear_vbase_slots (tree);
+static void dfs_unmark (tree);
+static void dfs_init_vbase_pointers (tree);
+static void dfs_get_vbase_types (tree);
+static void dfs_pushdecls (tree);
+static void dfs_compress_decls (tree);
+static void dfs_unuse_fields (tree);
+static tree add_conversions (tree);
+static tree get_virtuals_named_this (tree);
+static tree get_virtual_destructor (tree);
+static int tree_has_any_destructor_p (tree);
+static int covariant_return_p (tree, tree);
 static struct search_level *push_search_level
-	PROTO((struct stack_level *, struct obstack *));
+	(struct stack_level *, struct obstack *);
 static struct search_level *pop_search_level
-	PROTO((struct stack_level *));
+	(struct stack_level *);
 static tree breadth_first_search
-	PROTO((tree, tree (*) (tree), int (*) (tree)));
+	(tree, tree (*) (tree), int (*) (tree));
 
 static tree vbase_types;
 static tree vbase_decl_ptr_intermediate, vbase_decl_ptr;
@@ -1625,8 +1625,8 @@ lookup_member (xbasetype, name, protect, want_type)
 static tree
 breadth_first_search (binfo, testfn, qfn)
      tree binfo;
-     tree (*testfn) PROTO((tree));
-     int (*qfn) PROTO((tree));
+     tree (*testfn) (tree);
+     int (*qfn) (tree);
 {
   int head = 0, tail = 0;
   tree rval = NULL_TREE;
@@ -1684,7 +1684,7 @@ breadth_first_search (binfo, testfn, qfn)
 }
 
 /* Functions to use in breadth first searches.  */
-typedef tree (*pfi) PROTO((tree));
+typedef tree (*pfi) (tree);
 
 static tree declarator;
 
@@ -2105,8 +2105,8 @@ convert_pointer_to_single_level (to_type, expr)
 static void
 dfs_walk (binfo, fn, qfn)
      tree binfo;
-     void (*fn) PROTO((tree));
-     int (*qfn) PROTO((tree));
+     void (*fn) (tree);
+     int (*qfn) (tree);
 {
   tree binfos = BINFO_BASETYPES (binfo);
   int i, n_baselinks = binfos ? TREE_VEC_LENGTH (binfos) : 0;
@@ -2174,7 +2174,7 @@ dfs_walk (binfo, fn, qfn)
 static tree
 dfs_search (binfo, fn, start)
      tree binfo, start;
-     tree (*fn) PROTO((tree));
+     tree (*fn) (tree);
 {
   tree binfos = BINFO_BASETYPES (binfo);
   int i, n_baselinks = binfos ? TREE_VEC_LENGTH (binfos) : 0;
@@ -2393,7 +2393,7 @@ dfs_init_vbase_pointers (binfo)
 	 && VBASE_NAME_P (DECL_NAME (fields)))
     {
       tree ref = build (COMPONENT_REF, TREE_TYPE (fields),
-			build_indirect_ref (this_vbase_ptr, NULL_PTR), fields);
+			build_indirect_ref (this_vbase_ptr, NULL), fields);
       tree init = CLASSTYPE_SEARCH_SLOT (TREE_TYPE (TREE_TYPE (fields)));
       vbase_init_result = tree_cons (binfo_member (TREE_TYPE (TREE_TYPE (fields)),
 						   vbase_types),
@@ -2511,7 +2511,7 @@ expand_upcast_fixups (binfo, addr, orig_addr, vbase, vbase_addr, t,
   tree virtuals = BINFO_VIRTUALS (binfo);
   tree vc;
   tree delta;
-  unsigned HOST_WIDE_INT n;
+  HOST_WIDE_UINT n;
   
   delta = purpose_member (vbase, *vbase_offsets);
   if (! delta)
@@ -2570,7 +2570,7 @@ expand_upcast_fixups (binfo, addr, orig_addr, vbase, vbase_addr, t,
 	      expand_expr_stmt (init);
 	      /* Update the vtable pointers as necessary.  */
 	      ref = build_vfield_ref
-		(build_indirect_ref (addr, NULL_PTR),
+		(build_indirect_ref (addr, NULL),
 		 DECL_CONTEXT (CLASSTYPE_VFIELD (BINFO_TYPE (binfo))));
 	      expand_expr_stmt
 		(build_modify_expr (ref, NOP_EXPR, nvtbl));

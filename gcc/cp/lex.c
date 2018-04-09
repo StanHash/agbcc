@@ -35,14 +35,8 @@ Boston, MA 02111-1307, USA.  */
 #include "parse.h"
 #include "flags.h"
 #include "obstack.h"
-#include "c-pragma.h"
 #include "toplev.h"
 #include "output.h"
-
-#ifdef MULTIBYTE_CHARS
-#include "mbchar.h"
-#include <locale.h>
-#endif
 
 #define obstack_chunk_alloc xmalloc
 #define obstack_chunk_free free
@@ -54,37 +48,37 @@ Boston, MA 02111-1307, USA.  */
 extern struct obstack permanent_obstack;
 extern struct obstack *current_obstack, *saveable_obstack;
 
-extern void yyprint PROTO((FILE *, int, YYSTYPE));
-extern void compiler_error PROTO((char *, HOST_WIDE_INT,
-				  HOST_WIDE_INT));
+extern void yyprint (FILE *, int, YYSTYPE);
+extern void compiler_error (char *, HOST_WIDE_INT,
+				  HOST_WIDE_INT);
 
-static tree get_time_identifier PROTO((char *));
-static int check_newline PROTO((void));
-static int skip_white_space PROTO((int));
-static void finish_defarg PROTO((void));
-static int my_get_run_time PROTO((void));
-static int get_last_nonwhite_on_line PROTO((void));
-static int interface_strcmp PROTO((char *));
-static int readescape PROTO((int *));
-static char *extend_token_buffer PROTO((char *));
-static void consume_string PROTO((struct obstack *, int));
-static void set_typedecl_interface_info PROTO((tree, tree));
-static void feed_defarg PROTO((tree, tree));
-static int set_vardecl_interface_info PROTO((tree, tree));
-static void store_pending_inline PROTO((tree, struct pending_inline *));
-static void reinit_parse_for_expr PROTO((struct obstack *));
-static int *init_cpp_parse PROTO((void));
-static int handle_cp_pragma PROTO((char *));
+static tree get_time_identifier (char *);
+static int check_newline (void);
+static int skip_white_space (int);
+static void finish_defarg (void);
+static int my_get_run_time (void);
+static int get_last_nonwhite_on_line (void);
+static int interface_strcmp (char *);
+static int readescape (int *);
+static char *extend_token_buffer (char *);
+static void consume_string (struct obstack *, int);
+static void set_typedecl_interface_info (tree, tree);
+static void feed_defarg (tree, tree);
+static int set_vardecl_interface_info (tree, tree);
+static void store_pending_inline (tree, struct pending_inline *);
+static void reinit_parse_for_expr (struct obstack *);
+static int *init_cpp_parse (void);
+static int handle_cp_pragma (char *);
 #ifdef HANDLE_GENERIC_PRAGMAS
-static int handle_generic_pragma PROTO((int));
+static int handle_generic_pragma (int);
 #endif
 #ifdef GATHER_STATISTICS
 #ifdef REDUCE_LENGTH
-static int reduce_cmp PROTO((int *, int *));
-static int token_cmp PROTO((int *, int *));
+static int reduce_cmp (int *, int *);
+static int token_cmp (int *, int *);
 #endif
 #endif
-static void begin_definition_of_inclass_inline PROTO((struct pending_inline*));
+static void begin_definition_of_inclass_inline (struct pending_inline*);
 
 /* Given a file name X, return the nondirectory portion.
    Keep in mind that X can be computed more than once.  */
@@ -334,7 +328,7 @@ get_time_identifier (name)
   int len = strlen (name);
   char *buf = (char *) alloca (len + 6);
   strcpy (buf, "file ");
-  bcopy (name, buf+5, len);
+  copy_memory (name, buf+5, len);
   buf[len+5] = '\0';
   time_identifier = get_identifier (buf);
   if (TIME_IDENTIFIER_TIME (time_identifier) == NULL_TREE)
@@ -357,11 +351,11 @@ __inline
 static int
 my_get_run_time ()
 {
-  int old_quiet_flag = quiet_flag;
+  int old_quiet_flag = !loud_flag;
   int this_time;
-  quiet_flag = 0;
+  loud_flag = 1;
   this_time = get_run_time ();
-  quiet_flag = old_quiet_flag;
+  loud_flag = !old_quiet_flag;
   return this_time;
 }
 
@@ -404,12 +398,6 @@ char *cplus_tree_code_name[] = {
 void
 lang_init_options ()
 {
-#if USE_CPPLIB
-  cpp_reader_init (&parse_in);
-  parse_in.opts = &parse_options;
-  cpp_options_init (&parse_options);
-#endif
-
   /* Default exceptions on.  */
   flag_exceptions = 1;
 }
@@ -420,12 +408,7 @@ lang_init ()
   /* the beginning of the file is a new line; check for # */
   /* With luck, we discover the real source file's name from that
      and put it in input_filename.  */
-#if ! USE_CPPLIB
   put_back (check_newline ());
-#else
-  check_newline ();
-  yy_cur--;
-#endif
   if (flag_gnu_xref) GNU_xref_begin (input_filename);
   init_repo (input_filename);
 }
@@ -475,10 +458,10 @@ init_cpp_parse ()
 #ifdef GATHER_STATISTICS
 #ifdef REDUCE_LENGTH
   reduce_count = (int *)malloc (sizeof (int) * (REDUCE_LENGTH + 1));
-  bzero (reduce_count, sizeof (int) * (REDUCE_LENGTH + 1));
+  zero_memory (reduce_count, sizeof (int) * (REDUCE_LENGTH + 1));
   reduce_count += 1;
   token_count = (int *)malloc (sizeof (int) * (TOKEN_LENGTH + 1));
-  bzero (token_count, sizeof (int) * (TOKEN_LENGTH + 1));
+  zero_memory (token_count, sizeof (int) * (TOKEN_LENGTH + 1));
   token_count += 1;
 #endif
 #endif
@@ -536,20 +519,20 @@ init_parse (filename)
 
   init_cplus_expand ();
 
-  bcopy (cplus_tree_code_type,
+  copy_memory (cplus_tree_code_type,
 	 tree_code_type + (int) LAST_AND_UNUSED_TREE_CODE,
 	 (int)LAST_CPLUS_TREE_CODE - (int)LAST_AND_UNUSED_TREE_CODE);
-  bcopy ((char *)cplus_tree_code_length,
+  copy_memory ((char *)cplus_tree_code_length,
 	 (char *)(tree_code_length + (int) LAST_AND_UNUSED_TREE_CODE),
 	 (LAST_CPLUS_TREE_CODE - (int)LAST_AND_UNUSED_TREE_CODE) * sizeof (int));
-  bcopy ((char *)cplus_tree_code_name,
+  copy_memory ((char *)cplus_tree_code_name,
 	 (char *)(tree_code_name + (int) LAST_AND_UNUSED_TREE_CODE),
 	 (LAST_CPLUS_TREE_CODE - (int)LAST_AND_UNUSED_TREE_CODE) * sizeof (char *));
 
   opname_tab = (char **)oballoc ((int)LAST_CPLUS_TREE_CODE * sizeof (char *));
-  bzero ((char *)opname_tab, (int)LAST_CPLUS_TREE_CODE * sizeof (char *));
+  zero_memory ((char *)opname_tab, (int)LAST_CPLUS_TREE_CODE * sizeof (char *));
   assignop_tab = (char **)oballoc ((int)LAST_CPLUS_TREE_CODE * sizeof (char *));
-  bzero ((char *)assignop_tab, (int)LAST_CPLUS_TREE_CODE * sizeof (char *));
+  zero_memory ((char *)assignop_tab, (int)LAST_CPLUS_TREE_CODE * sizeof (char *));
 
   ansi_opname[0] = get_identifier ("<invalid operator>");
   for (i = 0; i < (int) LAST_CPLUS_TREE_CODE; i++)
@@ -1382,7 +1365,7 @@ consume_string (this_obstack, matching_char)
   int starting_lineno = lineno;
 #ifdef MULTIBYTE_CHARS
   int longest_char = local_mb_cur_max ();
-  (void) local_mbtowc (NULL_PTR, NULL_PTR, 0);
+  (void) local_mbtowc (NULL, NULL, 0);
 #endif
 
   do
@@ -2324,7 +2307,15 @@ pragma_ungetc (arg)
 
 int linemode;
 
-static int handle_cp_pragma PROTO((char *));
+static int handle_cp_pragma (char *);
+
+/* At the beginning of the file, check for a #line directive indicating
+   the real name of the file.  */
+
+void check_line_directive()
+{
+    ungetc(check_newline(), finput);
+}
 
 static int
 check_newline ()
@@ -3888,7 +3879,7 @@ real_yylex ()
 		   and not the suffixes; once we add `f' or `i',
 		   REAL_VALUE_ATOF may not work any more.  */
 		char *copy = (char *) alloca (p - token_buffer + 1);
-		bcopy (token_buffer, copy, p - token_buffer + 1);
+		copy_memory (token_buffer, copy, p - token_buffer + 1);
 
 		set_float_handler (handler);
 
@@ -3964,7 +3955,7 @@ real_yylex ()
 		      warning ("floating point number exceeds range of `double'");
 		  }
 
-		set_float_handler (NULL_PTR);
+		set_float_handler (NULL);
 	      }
 #ifdef ERANGE
 	    if (errno == ERANGE && pedantic)
@@ -4138,7 +4129,7 @@ real_yylex ()
 	int max_chars;
 #ifdef MULTIBYTE_CHARS
 	int longest_char = local_mb_cur_max ();
-	(void) local_mbtowc (NULL_PTR, NULL_PTR, 0);
+	(void) local_mbtowc (NULL, NULL, 0);
 #endif
 
 	max_chars = TYPE_PRECISION (integer_type_node) / width;
@@ -4275,12 +4266,12 @@ real_yylex ()
 	    else if (TREE_UNSIGNED (char_type_node)
 		     || ((result >> (num_bits - 1)) & 1) == 0)
 	      yylval.ttype
-		= build_int_2 (result & (~(unsigned HOST_WIDE_INT) 0
+		= build_int_2 (result & (~(HOST_WIDE_UINT) 0
 					 >> (HOST_BITS_PER_WIDE_INT - num_bits)),
 			       0);
 	    else
 	      yylval.ttype
-		= build_int_2 (result | ~(~(unsigned HOST_WIDE_INT) 0
+		= build_int_2 (result | ~(~(HOST_WIDE_UINT) 0
 					  >> (HOST_BITS_PER_WIDE_INT - num_bits)),
 			       -1);
 	    if (chars_seen <= 1)
@@ -4306,7 +4297,7 @@ real_yylex ()
 	                           : TYPE_PRECISION (char_type_node);
 #ifdef MULTIBYTE_CHARS
 	int longest_char = local_mb_cur_max ();
-	(void) local_mbtowc (NULL_PTR, NULL_PTR, 0);
+	(void) local_mbtowc (NULL, NULL, 0);
 #endif
 
 	c = getch ();
@@ -4384,10 +4375,7 @@ real_yylex ()
 		      value = 0;
 		    else
 		      value = (c >> (byte * width)) & bytemask;
-		    if (BYTES_BIG_ENDIAN)
-		      p[WCHAR_BYTES - byte - 1] = value;
-		    else
-		      p[byte] = value;
+		    p[byte] = value;
 		  }
 		p += WCHAR_BYTES;
 	      }
@@ -4412,7 +4400,7 @@ real_yylex ()
 	  {
 	    if (p + WCHAR_BYTES > token_buffer + maxtoken)
 	      p = extend_token_buffer (p);
-	    bzero (p, WCHAR_BYTES);
+	    zero_memory (p, WCHAR_BYTES);
 	    p += WCHAR_BYTES;
 	  }
 	else
@@ -4796,7 +4784,7 @@ copy_lang_decl (node)
   else
     size = sizeof (struct lang_decl);
   pi = (int *)obstack_alloc (&permanent_obstack, size);
-  bcopy ((char *)DECL_LANG_SPECIFIC (node), (char *)pi, size);
+  copy_memory ((char *)DECL_LANG_SPECIFIC (node), (char *)pi, size);
   DECL_LANG_SPECIFIC (node) = (struct lang_decl *)pi;
 }
 
@@ -4821,7 +4809,7 @@ make_lang_type (code)
 	my_friendly_assert (obstack == &permanent_obstack, 236);
 
       pi = (struct lang_type *) obstack_alloc (obstack, sizeof (struct lang_type));
-      bzero ((char *) pi, (int) sizeof (struct lang_type));
+      zero_memory ((char *) pi, (int) sizeof (struct lang_type));
 
       TYPE_LANG_SPECIFIC (t) = pi;
       CLASSTYPE_AS_LIST (t) = build_expr_list (NULL_TREE, t);
@@ -5145,7 +5133,7 @@ handle_generic_pragma (token)
 	  break;
 
 	case END_OF_LINE:
-	  return handle_pragma_token (NULL_PTR, NULL_TREE);
+	  return handle_pragma_token (NULL, NULL_TREE);
 
 	default:
 	  handle_pragma_token (token_buffer, NULL);

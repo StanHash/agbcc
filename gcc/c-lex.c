@@ -54,6 +54,10 @@ tree ridpointers[(int) RID_MAX];
    used in a context which makes it a reference to a variable.  */
 tree lastiddecl;
 
+/* Nonzero enables objc features.  */
+
+int doing_objc_thang;
+
 extern int yydebug;
 
 /* File used for outputting assembler code.  */
@@ -72,12 +76,16 @@ extern FILE *asm_out_file;
 
 static int maxtoken;		/* Current nominal length of token buffer.  */
 char *token_buffer;	/* Pointer to token buffer.
-			   Actual allocated length is maxtoken + 2. */
+			   Actual allocated length is maxtoken + 2.
+			   This is not static because objc-parse.y uses it.  */
 
 static int indent_level = 0;        /* Number of { minus number of }. */
 
 /* Nonzero if end-of-file has been seen on input.  */
 static int end_of_file;
+
+/* Buffered-back input character; faster than using ungetc.  */
+static int nextchar = -1;
 
 static int whitespace_cr		(int);
 static int skip_white_space		(int);
@@ -160,7 +168,7 @@ init_parse (filename)
 void
 finish_parse ()
 {
-    fclose(finput);
+  fclose(finput);
 }
 
 void
@@ -211,8 +219,8 @@ init_lex ()
   do { struct resword *s = is_reserved_word (STRING, sizeof (STRING) - 1); \
        if (s) s->name = ""; } while (0)
 
-
-  UNSET_RESERVED_WORD ("id");
+  if (!doing_objc_thang)
+    UNSET_RESERVED_WORD ("id");
 
   if (flag_traditional)
     {
@@ -398,14 +406,6 @@ extend_token_buffer (p)
   return token_buffer + offset;
 }
 
-/* At the beginning of the file, check for a #line directive indicating
-   the real name of the file.  */
-
-void check_line_directive()
-{
-    ungetc(check_newline(), finput);
-}
-
 /* At the beginning of a line, increment the line number
    and process any #-directive on this line.
    If the line is a #-directive, read the entire line and return a newline.
@@ -439,7 +439,7 @@ check_newline ()
 
   /* If a letter follows, then if the word here is `line', skip
      it and ignore it; otherwise, ignore the line, with an error
-     if the word isn't `pragma', `define', or `undef'.  */
+     if the word isn't `pragma', `ident', `define', or `undef'.  */
 
   if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
     {
@@ -450,9 +450,53 @@ check_newline ()
 	      && GETC() == 'g'
 	      && GETC() == 'm'
 	      && GETC() == 'a'
-	      && ((c = GETC()) == ' ' || c == '\t' || c == '\n' || whitespace_cr (c)))
+	      && ((c = GETC()) == ' ' || c == '\t' || c == '\n'
+		   || whitespace_cr (c) ))
 	    {
-	      warning ("ignoring pragma");
+	      while (c == ' ' || c == '\t' || whitespace_cr (c))
+		c = GETC ();
+	      if (c == '\n')
+		return c;
+
+#if defined HANDLE_PRAGMA || defined HANDLE_GENERIC_PRAGMAS
+	      UNGETC (c);
+	      token = yylex ();
+	      if (token != IDENTIFIER)
+		goto skipline;
+#endif /* HANDLE_PRAGMA || HANDLE_GENERIC_PRAGMAS */
+
+#ifdef HANDLE_PRAGMA
+	      /* We invoke HANDLE_PRAGMA before HANDLE_GENERIC_PRAGMAS (if
+		 both are defined), in order to give the back end a chance to
+		 override the interpretation of generic style pragmas.  */
+#if !USE_CPPLIB
+	      if (nextchar >= 0)
+		{
+		  c = nextchar, nextchar = -1;
+		  UNGETC (c);
+		}
+#endif /* !USE_CPPLIB */
+
+	      if (TREE_CODE (yylval.ttype) != IDENTIFIER_NODE)
+		goto skipline;
+
+	      if (HANDLE_PRAGMA (pragma_getc, pragma_ungetc,
+				 IDENTIFIER_POINTER (yylval.ttype)))
+		return GETC ();
+#endif /* HANDLE_PRAGMA */
+
+#ifdef HANDLE_GENERIC_PRAGMAS
+	      if (handle_generic_pragma (token))
+		return GETC ();
+#endif /* HANDLE_GENERIC_PRAGMAS */
+
+	      /* Issue a warning message if we have been asked to do so.
+		 Ignoring unknown pragmas in system header file unless
+		 an explcit -Wunknown-pragmas has been given. */
+	      if (warn_unknown_pragmas > 1
+		  || (warn_unknown_pragmas && ! in_system_header))
+		warning ("ignoring pragma: %s", token_buffer);
+
 	      goto skipline;
 	    }
 	}
@@ -491,6 +535,45 @@ check_newline ()
 	      && GETC() == 'e'
 	      && ((c = GETC()) == ' ' || c == '\t'))
 	    goto linenum;
+	}
+      else if (c == 'i')
+	{
+	  if (GETC() == 'd'
+	      && GETC() == 'e'
+	      && GETC() == 'n'
+	      && GETC() == 't'
+	      && ((c = GETC()) == ' ' || c == '\t'))
+	    {
+	      /* #ident.  The pedantic warning is now in cccp.c.  */
+
+	      /* Here we have just seen `#ident '.
+		 A string constant should follow.  */
+
+	      c = skip_white_space_on_line ();
+
+	      /* If no argument, ignore the line.  */
+	      if (c == '\n')
+		return c;
+
+	      UNGETC (c);
+	      token = yylex ();
+	      if (token != STRING
+		  || TREE_CODE (yylval.ttype) != STRING_CST)
+		{
+		  error ("invalid #ident");
+		  goto skipline;
+		}
+
+	      if (!flag_no_ident)
+		{
+#ifdef ASM_OUTPUT_IDENT
+		  ASM_OUTPUT_IDENT (asm_out_file, TREE_STRING_POINTER (yylval.ttype));
+#endif
+		}
+
+	      /* Skip the rest of this line.  */
+	      goto skipline;
+	    }
 	}
 
       error ("undefined or invalid # directive");
@@ -663,11 +746,63 @@ linenum:
 
   /* skip the rest of this line.  */
  skipline:
+#if !USE_CPPLIB
+  if (c != '\n' && c != EOF && nextchar >= 0)
+    c = nextchar, nextchar = -1;
+#endif
   while (c != '\n' && c != EOF)
     c = GETC();
   return c;
 }
+
+#ifdef HANDLE_GENERIC_PRAGMAS
 
+/* Handle a #pragma directive.
+   TOKEN is the token we read after `#pragma'.  Processes the entire input
+   line and return non-zero iff the pragma has been successfully parsed.  */
+
+/* This function has to be in this file, in order to get at
+   the token types.  */
+
+static int
+handle_generic_pragma (token)
+     register int token;
+{
+  register int c;
+
+  for (;;)
+    {
+      switch (token)
+	{
+	case IDENTIFIER:
+	case TYPENAME:
+	case STRING:
+	case CONSTANT:
+	  handle_pragma_token (token_buffer, yylval.ttype);
+	  break;
+	default:
+	  handle_pragma_token (token_buffer, NULL);
+	}
+#if !USE_CPPLIB
+      if (nextchar >= 0)
+	c = nextchar, nextchar = -1;
+      else
+#endif
+	c = GETC ();
+
+      while (c == ' ' || c == '\t')
+	c = GETC ();
+      UNGETC (c);
+
+      if (c == '\n' || c == EOF)
+	return handle_pragma_token (NULL, NULL);
+
+      token = yylex ();
+    }
+}
+
+#endif /* HANDLE_GENERIC_PRAGMAS */
+
 #define ENDFILE -1  /* token that represents end-of-file */
 
 /* Read an escape sequence, returning its equivalent as a character,
@@ -863,8 +998,9 @@ yylex ()
   register char *p;
   register int value;
   int wide_flag = 0;
+  int objc_flag = 0;
 
-  c = GETC();
+    c = GETC();
 
   /* Effectively do c = skip_white_space (c)
      but do it faster in the usual cases.  */
@@ -923,8 +1059,23 @@ yylex ()
       goto letter;
 
     case '@':
-      value = c;
-      break;
+      if (!doing_objc_thang)
+	{
+	  value = c;
+	  break;
+	}
+      else
+	{
+	  /* '@' may start a constant string object.  */
+	  register int c = GETC ();
+	  if (c == '"')
+	    {
+	      objc_flag = 1;
+	      goto string_constant;
+	    }
+	  UNGETC (c);
+	  /* Fall through to treat '@' as the start of an identifier.  */
+	}
 
     case 'A':  case 'B':  case 'C':  case 'D':  case 'E':
     case 'F':  case 'G':  case 'H':  case 'I':  case 'J':
@@ -939,10 +1090,22 @@ yylex ()
     case 'u':  case 'v':  case 'w':  case 'x':  case 'y':
     case 'z':
     case '_':
+    case '$':
     letter:
       p = token_buffer;
-      while (ISALNUM (c) || c == '_')
+      while (ISALNUM (c) || c == '_' || c == '$' || c == '@')
 	{
+	  /* Make sure this char really belongs in an identifier.  */
+	  if (c == '@' && ! doing_objc_thang)
+	    break;
+	  if (c == '$')
+	    {
+	      if (! dollars_in_ident)
+		error ("`$' in identifier");
+	      else if (pedantic)
+		pedwarn ("`$' in identifier");
+	    }
+
 	  if (p >= token_buffer + maxtoken)
 	    p = extend_token_buffer (p);
 
@@ -966,6 +1129,16 @@ yylex ()
 	    if (ptr->rid)
 	      yylval.ttype = ridpointers[(int) ptr->rid];
 	    value = (int) ptr->token;
+
+	    /* Only return OBJECTNAME if it is a typedef.  */
+	    if (doing_objc_thang && value == OBJECTNAME)
+	      {
+		lastiddecl = lookup_name(yylval.ttype);
+
+		if (lastiddecl == NULL_TREE
+		    || TREE_CODE (lastiddecl) != TYPE_DECL)
+		  value = IDENTIFIER;
+	      }
 
 	    /* Even if we decided to recognize asm, still perhaps warn.  */
 	    if (pedantic
@@ -1006,6 +1179,16 @@ yylex ()
 	      yylval.ttype = build_string (TREE_STRING_LENGTH (stringval),
 					   TREE_STRING_POINTER (stringval));
 	      value = STRING;
+	    }
+          else if (doing_objc_thang)
+            {
+	      tree objc_interface_decl = is_class_name (yylval.ttype);
+
+	      if (objc_interface_decl)
+		{
+		  value = CLASSNAME;
+		  yylval.ttype = objc_interface_decl;
+		}
 	    }
 	}
 
@@ -1546,7 +1729,7 @@ yylex ()
 	UNGETC (c);
 	*p = 0;
 
-	if (ISALNUM (c) || c == '.' || c == '_'
+	if (ISALNUM (c) || c == '.' || c == '_' || c == '$'
 	    || (!flag_traditional && (c == '-' || c == '+')
 		&& (p[-1] == 'e' || p[-1] == 'E')))
 	  error ("missing white space after number `%s'", token_buffer);
@@ -1562,6 +1745,10 @@ yylex ()
 	int chars_seen = 0;
 	unsigned width = TYPE_PRECISION (char_type_node);
 	int max_chars;
+#ifdef MULTIBYTE_CHARS
+	int longest_char = local_mb_cur_max ();
+	(void) local_mbtowc (NULL, NULL, 0);
+#endif
 
 	max_chars = TYPE_PRECISION (integer_type_node) / width;
 	if (wide_flag)
@@ -1698,7 +1885,7 @@ yylex ()
 		      value = 0;
 		    else
 		      value = (c >> (byte * width)) & bytemask;
-		    p[byte] = value;
+		      p[byte] = value;
 		  }
 		p += WCHAR_BYTES;
 	      }
@@ -1741,6 +1928,14 @@ yylex ()
 					 token_buffer + 1);
 	    TREE_TYPE (yylval.ttype) = wchar_array_type_node;
 	    value = STRING;
+	  }
+	else if (objc_flag)
+	  {
+	    /* Return an Objective-C @"..." constant string object.  */
+	    yylval.ttype = build_objc_string (p - (token_buffer + 1),
+					      token_buffer + 1);
+	    TREE_TYPE (yylval.ttype) = char_array_type_node;
+	    value = OBJC_STRING;
 	  }
 	else
 	  {

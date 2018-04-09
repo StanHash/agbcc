@@ -134,4 +134,4 @@ extern tree got_object;
    Positive is push count, negative is pop count.  */
 extern int pending_lang_change;
 
-extern int yylex PROTO((void));
+extern int yylex (void);

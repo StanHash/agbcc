@@ -55,38 +55,38 @@ int static_labelno;
 static struct obstack scratch_obstack;
 static char *scratch_firstobj;
 
-static void icat PROTO((HOST_WIDE_INT));
-static void dicat PROTO((HOST_WIDE_INT, HOST_WIDE_INT));
-static void flush_repeats PROTO((int, tree));
-static void build_overload_identifier PROTO((tree));
-static void build_overload_nested_name PROTO((tree));
-static void build_overload_int PROTO((tree, int));
-static void build_overload_identifier PROTO((tree));
-static void build_qualified_name PROTO((tree));
-static void build_overload_value PROTO((tree, tree, int));
-static void issue_nrepeats PROTO((int, tree));
-static char *build_mangled_name PROTO((tree,int,int));
-static void process_modifiers PROTO((tree));
-static void process_overload_item PROTO((tree,int));
-static void do_build_assign_ref PROTO((tree));
-static void do_build_copy_constructor PROTO((tree));
-static tree largest_union_member PROTO((tree));
-static void build_template_template_parm_names PROTO((tree));
-static void build_template_parm_names PROTO((tree, tree));
-static void build_underscore_int PROTO((int));
-static void start_squangling PROTO((void));
-static void end_squangling PROTO((void));
-static int check_ktype PROTO((tree, int));
-static int issue_ktype PROTO((tree));
-static void build_overload_scope_ref PROTO((tree));
-static void build_mangled_template_parm_index PROTO((char *, tree));
+static void icat (HOST_WIDE_INT);
+static void dicat (HOST_WIDE_INT, HOST_WIDE_INT);
+static void flush_repeats (int, tree);
+static void build_overload_identifier (tree);
+static void build_overload_nested_name (tree);
+static void build_overload_int (tree, int);
+static void build_overload_identifier (tree);
+static void build_qualified_name (tree);
+static void build_overload_value (tree, tree, int);
+static void issue_nrepeats (int, tree);
+static char *build_mangled_name (tree,int,int);
+static void process_modifiers (tree);
+static void process_overload_item (tree,int);
+static void do_build_assign_ref (tree);
+static void do_build_copy_constructor (tree);
+static tree largest_union_member (tree);
+static void build_template_template_parm_names (tree);
+static void build_template_parm_names (tree, tree);
+static void build_underscore_int (int);
+static void start_squangling (void);
+static void end_squangling (void);
+static int check_ktype (tree, int);
+static int issue_ktype (tree);
+static void build_overload_scope_ref (tree);
+static void build_mangled_template_parm_index (char *, tree);
 #if HOST_BITS_PER_WIDE_INT >= 64
-static void build_mangled_C9x_name PROTO((int));
+static void build_mangled_C9x_name (int);
 #endif
-static int is_back_referenceable_type PROTO((tree));
-static int check_btype PROTO((tree));
-static void build_mangled_name_for_type PROTO((tree));
-static void build_mangled_name_for_type_with_Gcode PROTO((tree, int));
+static int is_back_referenceable_type (tree);
+static int check_btype (tree);
+static void build_mangled_name_for_type (tree);
+static void build_mangled_name_for_type_with_Gcode (tree, int);
 
 # define OB_INIT() (scratch_firstobj ? (obstack_free (&scratch_obstack, scratch_firstobj), 0) : 0)
 # define OB_PUTC(C) (obstack_1grow (&scratch_obstack, (C)))
@@ -238,7 +238,7 @@ static __inline void
 icat (i)
      HOST_WIDE_INT i;
 {
-  unsigned HOST_WIDE_INT ui;
+  HOST_WIDE_UINT ui;
 
   /* Handle this case first, to go really quickly.  For many common values,
      the result of ui/10 below is 1.  */
@@ -266,7 +266,7 @@ static void
 dicat (lo, hi)
      HOST_WIDE_INT lo, hi;
 {
-  unsigned HOST_WIDE_INT ulo, uhi, qlo, qhi;
+  HOST_WIDE_UINT ulo, uhi, qlo, qhi;
 
   if (hi >= 0)
     {
@@ -279,7 +279,7 @@ dicat (lo, hi)
       ulo = -lo;
     }
   if (uhi == 0
-      && ulo < ((unsigned HOST_WIDE_INT)1 << (HOST_BITS_PER_WIDE_INT - 1)))
+      && ulo < ((HOST_WIDE_UINT)1 << (HOST_BITS_PER_WIDE_INT - 1)))
     {
       icat (ulo);
       return;
@@ -287,10 +287,10 @@ dicat (lo, hi)
   /* Divide 2^HOST_WIDE_INT*uhi+ulo by 10. */
   qhi = uhi / 10;
   uhi = uhi % 10;
-  qlo = uhi * (((unsigned HOST_WIDE_INT)1 << (HOST_BITS_PER_WIDE_INT - 1)) / 5);
+  qlo = uhi * (((HOST_WIDE_UINT)1 << (HOST_BITS_PER_WIDE_INT - 1)) / 5);
   qlo += ulo / 10;
   ulo = ulo % 10;
-  ulo += uhi * (((unsigned HOST_WIDE_INT)1 << (HOST_BITS_PER_WIDE_INT - 1)) % 5)
+  ulo += uhi * (((HOST_WIDE_UINT)1 << (HOST_BITS_PER_WIDE_INT - 1)) % 5)
 	 * 2;
   qlo += ulo / 10;
   ulo = ulo % 10;

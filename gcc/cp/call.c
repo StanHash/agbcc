@@ -39,57 +39,42 @@ Boston, MA 02111-1307, USA.  */
 extern int inhibit_warnings;
 extern tree ctor_label, dtor_label;
 
-static tree build_new_method_call PROTO((tree, tree, tree, tree, int));
+static tree build_new_method_call (tree, tree, tree, tree, int);
 
-static tree build_field_call PROTO((tree, tree, tree, tree));
-static tree find_scoped_type PROTO((tree, tree, tree));
-static struct z_candidate * tourney PROTO((struct z_candidate *));
-static int joust PROTO((struct z_candidate *, struct z_candidate *, int));
-static int compare_ics PROTO((tree, tree));
-static tree build_over_call PROTO((struct z_candidate *, tree, int));
-static tree convert_like PROTO((tree, tree));
-static void op_error PROTO((enum tree_code, enum tree_code, tree, tree,
-			    tree, char *));
-static tree build_object_call PROTO((tree, tree));
-static tree resolve_args PROTO((tree));
-static struct z_candidate * build_user_type_conversion_1
-	PROTO ((tree, tree, int));
-static void print_z_candidates PROTO((struct z_candidate *));
-static tree build_this PROTO((tree));
-static struct z_candidate * splice_viable PROTO((struct z_candidate *));
-static int any_viable PROTO((struct z_candidate *));
-static struct z_candidate * add_template_candidate
-	PROTO((struct z_candidate *, tree, tree, tree, tree, int,
-	       unification_kind_t));
-static struct z_candidate * add_template_candidate_real
-	PROTO((struct z_candidate *, tree, tree, tree, tree, int,
-	       tree, unification_kind_t));
-static struct z_candidate * add_template_conv_candidate 
-        PROTO((struct z_candidate *, tree, tree, tree, tree));
-static struct z_candidate * add_builtin_candidates
-	PROTO((struct z_candidate *, enum tree_code, enum tree_code,
-	       tree, tree *, int));
-static struct z_candidate * add_builtin_candidate
-	PROTO((struct z_candidate *, enum tree_code, enum tree_code,
-	       tree, tree, tree, tree *, tree *, int));
-static int is_complete PROTO((tree));
-static struct z_candidate * build_builtin_candidate 
-	PROTO((struct z_candidate *, tree, tree, tree, tree *, tree *,
-	       int));
-static struct z_candidate * add_conv_candidate 
-	PROTO((struct z_candidate *, tree, tree, tree));
-static struct z_candidate * add_function_candidate 
-	PROTO((struct z_candidate *, tree, tree, int));
-static tree implicit_conversion PROTO((tree, tree, tree, int));
-static tree standard_conversion PROTO((tree, tree, tree));
-static tree reference_binding PROTO((tree, tree, tree, int));
-static tree strip_top_quals PROTO((tree));
-static tree non_reference PROTO((tree));
-static tree build_conv PROTO((enum tree_code, tree, tree));
-static int is_subseq PROTO((tree, tree));
-static int is_properly_derived_from PROTO((tree, tree));
-static int maybe_handle_ref_bind PROTO((tree*, tree*));
-static void maybe_handle_implicit_object PROTO((tree*));
+static tree build_field_call (tree, tree, tree, tree);
+static tree find_scoped_type (tree, tree, tree);
+static struct z_candidate * tourney (struct z_candidate *);
+static int joust (struct z_candidate *, struct z_candidate *, int);
+static int compare_ics (tree, tree);
+static tree build_over_call (struct z_candidate *, tree, int);
+static tree convert_like (tree, tree);
+static void op_error (enum tree_code, enum tree_code, tree, tree, tree, char *);
+static tree build_object_call (tree, tree);
+static tree resolve_args (tree);
+static struct z_candidate * build_user_type_conversion_1(tree, tree, int);
+static void print_z_candidates (struct z_candidate *);
+static tree build_this (tree);
+static struct z_candidate * splice_viable (struct z_candidate *);
+static int any_viable (struct z_candidate *);
+static struct z_candidate * add_template_candidate(struct z_candidate *, tree, tree, tree, tree, int, unification_kind_t);
+static struct z_candidate * add_template_candidate_real(struct z_candidate *, tree, tree, tree, tree, int, tree, unification_kind_t);
+static struct z_candidate * add_template_conv_candidate(struct z_candidate *, tree, tree, tree, tree);
+static struct z_candidate * add_builtin_candidates(struct z_candidate *, enum tree_code, enum tree_code, tree, tree *, int);
+static struct z_candidate * add_builtin_candidate(struct z_candidate *, enum tree_code, enum tree_code, tree, tree, tree, tree *, tree *, int);
+static int is_complete (tree);
+static struct z_candidate * build_builtin_candidate(struct z_candidate *, tree, tree, tree, tree *, tree *, int);
+static struct z_candidate * add_conv_candidate(struct z_candidate *, tree, tree, tree);
+static struct z_candidate * add_function_candidate(struct z_candidate *, tree, tree, int);
+static tree implicit_conversion (tree, tree, tree, int);
+static tree standard_conversion (tree, tree, tree);
+static tree reference_binding (tree, tree, tree, int);
+static tree strip_top_quals (tree);
+static tree non_reference (tree);
+static tree build_conv (enum tree_code, tree, tree);
+static int is_subseq (tree, tree);
+static int is_properly_derived_from (tree, tree);
+static int maybe_handle_ref_bind (tree*, tree*);
+static void maybe_handle_implicit_object (tree*);
 
 tree
 build_vfield_ref (datum, type)
@@ -182,7 +167,7 @@ build_field_call (basetype_path, instance_ptr, name, parms)
 	  basetype = DECL_FIELD_CONTEXT (field);
 	  instance_ptr = convert_pointer_to (basetype, instance_ptr);
 
-	  instance = build_indirect_ref (instance_ptr, NULL_PTR);
+	  instance = build_indirect_ref (instance_ptr, NULL);
 	  return build_opfncall (CALL_EXPR, LOOKUP_NORMAL,
 				 build_component_ref_1 (instance, field, 0),
 				 parms, NULL_TREE);
@@ -195,7 +180,7 @@ build_field_call (basetype_path, instance_ptr, name, parms)
 	      /* This is a member which is a pointer to function.  */
 	      tree ref
 		= build_component_ref_1 (build_indirect_ref (instance_ptr,
-							     NULL_PTR),
+							     NULL),
 					 field, LOOKUP_COMPLAIN);
 	      if (ref == error_mark_node)
 		return error_mark_node;
@@ -466,7 +451,7 @@ build_scoped_method_call (exp, basetype, name, parms)
       if (TREE_CODE (exp) == INDIRECT_REF)
 	decl = build_indirect_ref
 	  (convert_pointer_to_real
-	   (binfo, build_unary_op (ADDR_EXPR, exp, 0)), NULL_PTR);
+	   (binfo, build_unary_op (ADDR_EXPR, exp, 0)), NULL);
       else
 	decl = build_scoped_ref (exp, basetype);
 
@@ -2847,7 +2832,7 @@ builtin:
 
     case MEMBER_REF:
       return build_m_component_ref
-	(build_indirect_ref (arg1, NULL_PTR), arg2);
+	(build_indirect_ref (arg1, NULL), arg2);
 
       /* The caller will deal with these.  */
     case ADDR_EXPR:
@@ -4217,7 +4202,7 @@ static void
 add_warning (winner, loser)
      struct z_candidate *winner, *loser;
 {
-  winner->warnings = expr_tree_cons (NULL_PTR,
+  winner->warnings = expr_tree_cons (NULL,
 				     build_expr_ptr_wrapper (loser),
 				     winner->warnings);
 }

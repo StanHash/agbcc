@@ -34,9 +34,9 @@ Boston, MA 02111-1307, USA.  */
 #include "toplev.h"
 #include "decl.h"
 
-static tree cp_convert_to_pointer PROTO((tree, tree));
-static tree convert_to_pointer_force PROTO((tree, tree));
-static tree build_up_reference PROTO((tree, tree, int));
+static tree cp_convert_to_pointer (tree, tree);
+static tree convert_to_pointer_force (tree, tree);
+static tree build_up_reference (tree, tree, int);
 
 /* Change of width--truncation and extension of integers or reals--
    is represented with NOP_EXPR.  Proper functioning of many things
@@ -544,7 +544,7 @@ convert_from_reference (val)
   if (TREE_CODE (type) == OFFSET_TYPE)
     type = TREE_TYPE (type);
   if (TREE_CODE (type) == REFERENCE_TYPE)
-    return build_indirect_ref (val, NULL_PTR);
+    return build_indirect_ref (val, NULL);
   return val;
 }
 

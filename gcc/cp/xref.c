@@ -27,7 +27,7 @@ Boston, MA 02111-1307, USA.  */
 #include "input.h"
 #include "toplev.h"
 
-extern char *getpwd PROTO((void));
+extern char *getpwd (void);
 
 /* The character(s) used to join a directory specification (obtained with
    getwd or equivalent) with a non-absolute file name.  */
@@ -93,7 +93,7 @@ typedef struct _XREF_FILE
 
 typedef struct _XREF_SCOPE
 {
-  int gid;
+  intptr_t gid;
   int lid;
   XREF_FILE file;
   int start;
@@ -121,14 +121,14 @@ static	tree		last_fndecl = NULL;
 /*	Forward definitions						*/
 /*									*/
 /************************************************************************/
-static	void		gen_assign PROTO((XREF_FILE, tree));
-static	XREF_FILE	find_file PROTO((char *));
-static	char *		filename PROTO((XREF_FILE));
-static	char *		fctname PROTO((tree));
-static	char *		declname PROTO((tree));
-static	void		simplify_type PROTO((char *));
-static	char *		fixname PROTO((char *, char *));
-static	void		open_xref_file PROTO((char *));
+static	void		gen_assign (XREF_FILE, tree);
+static	XREF_FILE	find_file (char *);
+static	char *		filename (XREF_FILE);
+static	char *		fctname (tree);
+static	char *		declname (tree);
+static	void		simplify_type (char *);
+static	char *		fixname (char *, char *);
+static	void		open_xref_file (char *);
 
 /* Start cross referencing.  FILE is the name of the file we xref.  */
 
@@ -226,7 +226,7 @@ GNU_xref_file (name)
 
 void
 GNU_xref_start_scope (id)
-   HOST_WIDE_INT id;
+   intptr_t id;
 {
   XREF_SCOPE xs;
   XREF_FILE xf;
@@ -253,8 +253,8 @@ GNU_xref_start_scope (id)
 
 void
 GNU_xref_end_scope (id,inid,prm,keep)
-   HOST_WIDE_INT id;
-   HOST_WIDE_INT inid;
+   intptr_t id;
+   intptr_t inid;
    int prm,keep;
 {
   XREF_FILE xf;
@@ -288,7 +288,7 @@ GNU_xref_end_scope (id,inid,prm,keep)
 
   fprintf (xref_file, "SCP %s %d %d %d ",
 	   filename (xf), xs->start, lineno,xs->lid);
-  fprintf (xref_file, HOST_WIDE_INT_PRINT_DEC, inid);
+  fprintf (xref_file, "%"PRIdPTR, inid);
   fprintf (xref_file, " %s\n", stype);
 
   if (lxs == NULL) cur_scope = xs->outer;

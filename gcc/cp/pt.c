@@ -36,13 +36,12 @@ Boston, MA 02111-1307, USA.  */
 #include "parse.h"
 #include "lex.h"
 #include "output.h"
-#include "defaults.h"
 #include "except.h"
 #include "toplev.h"
 
 /* The type of functions taking a tree, and some additional data, and
    returning an int.  */
-typedef int (*tree_fn_t) PROTO((tree, void*));
+typedef int (*tree_fn_t) (tree, void*);
 
 extern struct obstack permanent_obstack;
 
@@ -77,66 +76,66 @@ static tree saved_trees;
 #define UNIFY_ALLOW_DERIVED 4
 #define UNIFY_ALLOW_INTEGER 8
 
-static int unify PROTO((tree, tree, tree, tree, int, int*));
-static int resolve_overloaded_unification PROTO((tree, tree, tree, tree,
+static int unify (tree, tree, tree, tree, int, int*);
+static int resolve_overloaded_unification (tree, tree, tree, tree,
 						 unification_kind_t, int,
-						 int*));
-static int try_one_overload PROTO((tree, tree, tree, tree, tree,
-				   unification_kind_t, int, int*));
-static int unify PROTO((tree, tree, tree, tree, int, int*));
-static void add_pending_template PROTO((tree));
-static int push_tinst_level PROTO((tree));
-static tree classtype_mangled_name PROTO((tree));
-static char *mangle_class_name_for_template PROTO((char *, tree, tree));
-static tree tsubst_expr_values PROTO((tree, tree));
-static int list_eq PROTO((tree, tree));
-static tree get_class_bindings PROTO((tree, tree, tree));
-static tree coerce_template_parms PROTO((tree, tree, tree, int, int));
-static void tsubst_enum	PROTO((tree, tree, tree));
-static tree add_to_template_args PROTO((tree, tree));
-static tree add_outermost_template_args PROTO((tree, tree));
-static void maybe_adjust_types_for_deduction PROTO((unification_kind_t, tree*,
-						    tree*)); 
-static int  type_unification_real PROTO((tree, tree, tree, tree,
-					 int, unification_kind_t, int, int*));
-static void note_template_header PROTO((int));
-static tree maybe_fold_nontype_arg PROTO((tree));
-static tree convert_nontype_argument PROTO((tree, tree));
-static tree convert_template_argument PROTO ((tree, tree, tree, int,
-					      int , tree));
-static tree get_bindings_overload PROTO((tree, tree, tree));
-static int for_each_template_parm PROTO((tree, tree_fn_t, void*));
-static tree build_template_parm_index PROTO((int, int, int, tree, tree));
-static int inline_needs_template_parms PROTO((tree));
-static void push_inline_template_parms_recursive PROTO((tree, int));
-static tree retrieve_specialization PROTO((tree, tree));
-static tree register_specialization PROTO((tree, tree, tree));
-static int unregister_specialization PROTO((tree, tree));
-static tree reduce_template_parm_level PROTO((tree, tree, int));
-static tree build_template_decl PROTO((tree, tree));
-static int mark_template_parm PROTO((tree, void *));
-static tree tsubst_friend_function PROTO((tree, tree));
-static tree tsubst_friend_class PROTO((tree, tree));
-static tree get_bindings_real PROTO((tree, tree, tree, int));
-static int template_decl_level PROTO((tree));
-static tree maybe_get_template_decl_from_type_decl PROTO((tree));
-static int check_cv_quals_for_unify PROTO((int, tree, tree));
-static tree tsubst_template_arg_vector PROTO((tree, tree));
-static tree tsubst_template_parms PROTO((tree, tree));
-static void regenerate_decl_from_template PROTO((tree, tree));
-static tree most_specialized PROTO((tree, tree, tree));
-static tree most_specialized_class PROTO((tree, tree));
-static tree most_general_template PROTO((tree));
-static void set_mangled_name_for_template_decl PROTO((tree));
-static int template_class_depth_real PROTO((tree, int));
-static tree tsubst_aggr_type PROTO((tree, tree, tree, int));
-static tree tsubst_decl PROTO((tree, tree, tree, tree));
-static tree tsubst_arg_types PROTO((tree, tree, tree));
-static void check_specialization_scope PROTO((void));
-static tree process_partial_specialization PROTO((tree));
-static void set_current_access_from_decl PROTO((tree));
-static void check_default_tmpl_args PROTO((tree, tree, int, int));
-static tree tsubst_call_declarator_parms PROTO((tree, tree, tree));
+						 int*);
+static int try_one_overload (tree, tree, tree, tree, tree,
+				   unification_kind_t, int, int*);
+static int unify (tree, tree, tree, tree, int, int*);
+static void add_pending_template (tree);
+static int push_tinst_level (tree);
+static tree classtype_mangled_name (tree);
+static char *mangle_class_name_for_template (char *, tree, tree);
+static tree tsubst_expr_values (tree, tree);
+static int list_eq (tree, tree);
+static tree get_class_bindings (tree, tree, tree);
+static tree coerce_template_parms (tree, tree, tree, int, int);
+static void tsubst_enum	(tree, tree, tree);
+static tree add_to_template_args (tree, tree);
+static tree add_outermost_template_args (tree, tree);
+static void maybe_adjust_types_for_deduction (unification_kind_t, tree*,
+						    tree*); 
+static int  type_unification_real (tree, tree, tree, tree,
+					 int, unification_kind_t, int, int*);
+static void note_template_header (int);
+static tree maybe_fold_nontype_arg (tree);
+static tree convert_nontype_argument (tree, tree);
+static tree convert_template_argument (tree, tree, tree, int,
+					      int , tree);
+static tree get_bindings_overload (tree, tree, tree);
+static int for_each_template_parm (tree, tree_fn_t, void*);
+static tree build_template_parm_index (int, int, int, tree, tree);
+static int inline_needs_template_parms (tree);
+static void push_inline_template_parms_recursive (tree, int);
+static tree retrieve_specialization (tree, tree);
+static tree register_specialization (tree, tree, tree);
+static int unregister_specialization (tree, tree);
+static tree reduce_template_parm_level (tree, tree, int);
+static tree build_template_decl (tree, tree);
+static int mark_template_parm (tree, void *);
+static tree tsubst_friend_function (tree, tree);
+static tree tsubst_friend_class (tree, tree);
+static tree get_bindings_real (tree, tree, tree, int);
+static int template_decl_level (tree);
+static tree maybe_get_template_decl_from_type_decl (tree);
+static int check_cv_quals_for_unify (int, tree, tree);
+static tree tsubst_template_arg_vector (tree, tree);
+static tree tsubst_template_parms (tree, tree);
+static void regenerate_decl_from_template (tree, tree);
+static tree most_specialized (tree, tree, tree);
+static tree most_specialized_class (tree, tree);
+static tree most_general_template (tree);
+static void set_mangled_name_for_template_decl (tree);
+static int template_class_depth_real (tree, int);
+static tree tsubst_aggr_type (tree, tree, tree, int);
+static tree tsubst_decl (tree, tree, tree, tree);
+static tree tsubst_arg_types (tree, tree, tree);
+static void check_specialization_scope (void);
+static tree process_partial_specialization (tree);
+static void set_current_access_from_decl (tree);
+static void check_default_tmpl_args (tree, tree, int, int);
+static tree tsubst_call_declarator_parms (tree, tree, tree);
 
 /* We use TREE_VECs to hold template arguments.  If there is only one
    level of template arguments, then the TREE_VEC contains the
@@ -1888,10 +1887,10 @@ process_partial_specialization (decl)
      or some such would have been OK.  */
   tpd.level = TMPL_PARMS_DEPTH (current_template_parms);
   tpd.parms = alloca (sizeof (int) * ntparms);
-  bzero ((PTR) tpd.parms, sizeof (int) * ntparms);
+  zero_memory ((void*) tpd.parms, sizeof (int) * ntparms);
 
   tpd.arg_uses_template_parms = alloca (sizeof (int) * nargs);
-  bzero ((PTR) tpd.arg_uses_template_parms, sizeof (int) * nargs);
+  zero_memory ((void*) tpd.arg_uses_template_parms, sizeof (int) * nargs);
   for (i = 0; i < nargs; ++i)
     {
       tpd.current_arg = i;
@@ -1974,7 +1973,7 @@ process_partial_specialization (decl)
 		 template, not in the specialization.  */
 	      tpd2.current_arg = i;
 	      tpd2.arg_uses_template_parms[i] = 0;
-	      bzero ((PTR) tpd2.parms, sizeof (int) * nargs);
+	      zero_memory ((void*) tpd2.parms, sizeof (int) * nargs);
 	      for_each_template_parm (type,
 				      &mark_template_parm,
 				      &tpd2);
@@ -4251,7 +4250,7 @@ tsubst_friend_function (decl, args)
     {
       set_mangled_name_for_decl (new_friend);
       DECL_RTL (new_friend) = 0;
-      make_decl_rtl (new_friend, NULL_PTR, 1);
+      make_decl_rtl (new_friend, NULL, 1);
     }
       
   if (DECL_NAMESPACE_SCOPE_P (new_friend))
@@ -4959,7 +4958,7 @@ tsubst_template_arg_vector (t, args)
   int len = TREE_VEC_LENGTH (t), need_new = 0, i;
   tree *elts = (tree *) alloca (len * sizeof (tree));
   
-  bzero ((char *) elts, len * sizeof (tree));
+  zero_memory ((char *) elts, len * sizeof (tree));
   
   for (i = 0; i < len; i++)
     {
@@ -5468,7 +5467,7 @@ tsubst_decl (t, args, type, in_decl)
 	      }
 	    
 	    DECL_RTL (r) = 0;
-	    make_decl_rtl (r, NULL_PTR, 1);
+	    make_decl_rtl (r, NULL, 1);
 	    
 	    /* Like grokfndecl.  If we don't do this, pushdecl will
 	       mess up our TREE_CHAIN because it doesn't find a
@@ -6935,7 +6934,7 @@ type_unification (tparms, targs, parms, args, explicit_targs,
 	return 1;
 
       explicit_mask = alloca (sizeof (int) * TREE_VEC_LENGTH (targs));
-      bzero ((char *) explicit_mask, sizeof(int) * TREE_VEC_LENGTH (targs));
+      zero_memory ((char *) explicit_mask, sizeof(int) * TREE_VEC_LENGTH (targs));
 
       for (i = 0; 
 	   i < TREE_VEC_LENGTH (arg_vec) 

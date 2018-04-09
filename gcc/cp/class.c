@@ -41,7 +41,7 @@ extern struct obstack permanent_obstack;
    same.  */
 #define SAME_FN(FN1DECL, FN2DECL) (DECL_ASSEMBLER_NAME (FN1DECL) == DECL_ASSEMBLER_NAME (FN2DECL))
 
-extern void set_class_shadows PROTO ((tree));
+extern void set_class_shadows (tree);
 
 /* The number of nested classes being processed.  If we are not in the
    scope of any class, this is zero.  */
@@ -90,50 +90,50 @@ static char *class_cache_firstobj;
 
 struct base_info;
 
-static tree get_vfield_name PROTO((tree));
-static void finish_struct_anon PROTO((tree));
-static tree build_vbase_pointer PROTO((tree, tree));
-static tree build_vtable_entry PROTO((tree, tree));
-static tree get_vtable_name PROTO((tree));
-static tree get_derived_offset PROTO((tree, tree));
-static tree get_basefndecls PROTO((tree, tree));
-static void set_rtti_entry PROTO((tree, tree, tree));
-static tree build_vtable PROTO((tree, tree));
-static void prepare_fresh_vtable PROTO((tree, tree));
-static void fixup_vtable_deltas1 PROTO((tree, tree));
-static void fixup_vtable_deltas PROTO((tree, int, tree));
-static void finish_vtbls PROTO((tree, int, tree));
-static void modify_vtable_entry PROTO((tree, tree, tree));
-static tree get_vtable_entry_n PROTO((tree, unsigned HOST_WIDE_INT));
-static void add_virtual_function PROTO((tree *, tree *, int *, tree, tree));
-static tree delete_duplicate_fields_1 PROTO((tree, tree));
-static void delete_duplicate_fields PROTO((tree));
-static void finish_struct_bits PROTO((tree, int));
-static int alter_access PROTO((tree, tree, tree, tree));
-static void handle_using_decl PROTO((tree, tree, tree, tree));
-static int overrides PROTO((tree, tree));
-static int strictly_overrides PROTO((tree, tree));
-static void merge_overrides PROTO((tree, tree, int, tree));
-static void override_one_vtable PROTO((tree, tree, tree));
-static void mark_overriders PROTO((tree, tree));
-static void check_for_override PROTO((tree, tree));
-static tree maybe_fixup_vptrs PROTO((tree, tree, tree));
-static tree get_class_offset_1 PROTO((tree, tree, tree, tree, tree));
-static tree get_class_offset PROTO((tree, tree, tree, tree));
-static void modify_one_vtable PROTO((tree, tree, tree, tree));
-static void modify_all_vtables PROTO((tree, tree, tree));
-static void modify_all_direct_vtables PROTO((tree, int, tree, tree,
-					     tree));
-static void modify_all_indirect_vtables PROTO((tree, int, int, tree,
-					       tree, tree));
-static void build_class_init_list PROTO((tree));
-static int finish_base_struct PROTO((tree, struct base_info *));
-static void finish_struct_methods PROTO((tree));
-static void maybe_warn_about_overly_private_class PROTO ((tree));
-static void check_member_decl_is_same_in_complete_scope PROTO((tree, tree));
-static tree make_method_vec PROTO((int));
-static void free_method_vec PROTO((tree));
-static tree add_implicitly_declared_members PROTO((tree, int, int, int));
+static tree get_vfield_name (tree);
+static void finish_struct_anon (tree);
+static tree build_vbase_pointer (tree, tree);
+static tree build_vtable_entry (tree, tree);
+static tree get_vtable_name (tree);
+static tree get_derived_offset (tree, tree);
+static tree get_basefndecls (tree, tree);
+static void set_rtti_entry (tree, tree, tree);
+static tree build_vtable (tree, tree);
+static void prepare_fresh_vtable (tree, tree);
+static void fixup_vtable_deltas1 (tree, tree);
+static void fixup_vtable_deltas (tree, int, tree);
+static void finish_vtbls (tree, int, tree);
+static void modify_vtable_entry (tree, tree, tree);
+static tree get_vtable_entry_n (tree, HOST_WIDE_UINT);
+static void add_virtual_function (tree *, tree *, int *, tree, tree);
+static tree delete_duplicate_fields_1 (tree, tree);
+static void delete_duplicate_fields (tree);
+static void finish_struct_bits (tree, int);
+static int alter_access (tree, tree, tree, tree);
+static void handle_using_decl (tree, tree, tree, tree);
+static int overrides (tree, tree);
+static int strictly_overrides (tree, tree);
+static void merge_overrides (tree, tree, int, tree);
+static void override_one_vtable (tree, tree, tree);
+static void mark_overriders (tree, tree);
+static void check_for_override (tree, tree);
+static tree maybe_fixup_vptrs (tree, tree, tree);
+static tree get_class_offset_1 (tree, tree, tree, tree, tree);
+static tree get_class_offset (tree, tree, tree, tree);
+static void modify_one_vtable (tree, tree, tree, tree);
+static void modify_all_vtables (tree, tree, tree);
+static void modify_all_direct_vtables (tree, int, tree, tree,
+					     tree);
+static void modify_all_indirect_vtables (tree, int, int, tree,
+					       tree, tree);
+static void build_class_init_list (tree);
+static int finish_base_struct (tree, struct base_info *);
+static void finish_struct_methods (tree);
+static void maybe_warn_about_overly_private_class (tree);
+static void check_member_decl_is_same_in_complete_scope (tree, tree);
+static tree make_method_vec (int);
+static void free_method_vec (tree);
+static tree add_implicitly_declared_members (tree, int, int, int);
 
 /* Way of stacking language names.  */
 tree *current_lang_base, *current_lang_stack;
@@ -297,7 +297,7 @@ build_vbase_path (code, type, expr, path, nonnull)
 		      tree binfo = get_binfo (last, TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (nonnull_expr))), 0);
 		      nonnull_expr = convert_pointer_to_real (binfo, nonnull_expr);
 		    }
-		  ind = build_indirect_ref (nonnull_expr, NULL_PTR);
+		  ind = build_indirect_ref (nonnull_expr, NULL);
 		  nonnull_expr = build_vbase_pointer (ind, last_virtual);
 		  if (nonnull == 0
 		      && TREE_CODE (type) == POINTER_TYPE
@@ -926,9 +926,9 @@ static tree
 get_vtable_entry (virtuals, base_fndecl)
      tree virtuals, base_fndecl;
 {
-  unsigned HOST_WIDE_INT n = (HOST_BITS_PER_WIDE_INT >= BITS_PER_WORD
+  HOST_WIDE_UINT n = (HOST_BITS_PER_WIDE_INT >= BITS_PER_WORD
 	   ? (TREE_INT_CST_LOW (DECL_VINDEX (base_fndecl))
-	      & (((unsigned HOST_WIDE_INT)1<<(BITS_PER_WORD-1))-1))
+	      & (((HOST_WIDE_UINT)1<<(BITS_PER_WORD-1))-1))
 	   : TREE_INT_CST_LOW (DECL_VINDEX (base_fndecl)));
 
 #ifdef GATHER_STATISTICS
@@ -976,7 +976,7 @@ modify_vtable_entry (old_entry_in_list, new_entry, fndecl)
 static tree
 get_vtable_entry_n (virtuals, n)
      tree virtuals;
-     unsigned HOST_WIDE_INT n;
+     HOST_WIDE_UINT n;
 {
   while (n > 0)
     {
@@ -1097,7 +1097,7 @@ make_method_vec (n)
 	new_vec = *t;
 	*t = TREE_CHAIN (new_vec);
 	TREE_CHAIN (new_vec) = NULL_TREE;
-	bzero ((PTR) &TREE_VEC_ELT (new_vec, 0), n * sizeof (tree));
+	zero_memory ((void*) &TREE_VEC_ELT (new_vec, 0), n * sizeof (tree));
 	return new_vec;
       }
 
@@ -1181,8 +1181,8 @@ add_method (type, fields, method)
 	    {
 	      /* We need a bigger method vector.  */
 	      tree new_vec = make_method_vec (2 * len);
-	      bcopy ((PTR) &TREE_VEC_ELT (method_vec, 0),
-		     (PTR) &TREE_VEC_ELT (new_vec, 0),
+	      copy_memory ((void*) &TREE_VEC_ELT (method_vec, 0),
+		     (void*) &TREE_VEC_ELT (new_vec, 0),
 		     len * sizeof (tree));
 	      free_method_vec (method_vec);
 	      len = 2 * len;
@@ -1289,8 +1289,8 @@ add_method (type, fields, method)
 		  /* We know the last slot in the vector is empty
 		     because we know that at this point there's room for
 		     a new function.  */
-		  bcopy ((PTR) &TREE_VEC_ELT (method_vec, i),
-			 (PTR) &TREE_VEC_ELT (method_vec, i + 1),
+		  copy_memory ((void*) &TREE_VEC_ELT (method_vec, i),
+			 (void*) &TREE_VEC_ELT (method_vec, i + 1),
 			 (len - i - 1) * sizeof (tree));
 		  TREE_VEC_ELT (method_vec, i) = NULL_TREE;
 		}
@@ -1749,7 +1749,7 @@ finish_base_struct (t, b)
   tree binfos = TYPE_BINFO_BASETYPES (t);
   int i, n_baseclasses = binfos ? TREE_VEC_LENGTH (binfos) : 0;
   int first_vfn_base_index = -1;
-  bzero ((char *) b, sizeof (struct base_info));
+  zero_memory ((char *) b, sizeof (struct base_info));
 
   for (i = 0; i < n_baseclasses; i++)
     {
@@ -2322,7 +2322,7 @@ duplicate_tag_error (t)
       int interface_only = CLASSTYPE_INTERFACE_ONLY (t);
       int interface_unknown = CLASSTYPE_INTERFACE_UNKNOWN (t);
 
-      bzero ((char *) TYPE_LANG_SPECIFIC (t), sizeof (struct lang_type));
+      zero_memory ((char *) TYPE_LANG_SPECIFIC (t), sizeof (struct lang_type));
       BINFO_BASETYPES(binfo) = NULL_TREE;
 
       CLASSTYPE_AS_LIST (t) = as_list;
@@ -2497,7 +2497,7 @@ get_class_offset (context, t, binfo, fndecl)
 
 /* Skip RTTI information at the front of the virtual list.  */
 
-unsigned HOST_WIDE_INT
+HOST_WIDE_UINT
 skip_rtti_stuff (virtuals)
      tree *virtuals;
 {
@@ -2525,7 +2525,7 @@ modify_one_vtable (binfo, t, fndecl, pfn)
      tree binfo, t, fndecl, pfn;
 {
   tree virtuals = BINFO_VIRTUALS (binfo);
-  unsigned HOST_WIDE_INT n;
+  HOST_WIDE_UINT n;
   
   /* update rtti entry */
   if (flag_rtti)
@@ -2636,7 +2636,7 @@ fixup_vtable_deltas1 (binfo, t)
      tree binfo, t;
 {
   tree virtuals = BINFO_VIRTUALS (binfo);
-  unsigned HOST_WIDE_INT n;
+  HOST_WIDE_UINT n;
   
   n = skip_rtti_stuff (&virtuals);
 

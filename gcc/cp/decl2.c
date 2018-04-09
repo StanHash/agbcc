@@ -38,27 +38,20 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "except.h"
 #include "expr.h"
-#include "defaults.h"
 #include "toplev.h"
 #include "dwarf2out.h"
-#include "dwarfout.h"
 
-#if USE_CPPLIB
-#include "cpplib.h"
-extern cpp_reader  parse_in;
-#endif
-
-static tree get_sentry PROTO((tree));
-static void mark_vtable_entries PROTO((tree));
-static void grok_function_init PROTO((tree, tree));
-static int finish_vtable_vardecl PROTO((tree, tree));
-static int prune_vtable_vardecl PROTO((tree, tree));
-static void finish_sigtable_vardecl PROTO((tree, tree));
-static int is_namespace_ancestor PROTO((tree, tree));
-static void add_using_namespace PROTO((tree, tree, int));
-static tree ambiguous_decl PROTO((tree, tree, tree,int));
-static tree build_anon_union_vars PROTO((tree, tree*, int, int));
-static void check_decl_namespace PROTO((void));
+static tree get_sentry (tree);
+static void mark_vtable_entries (tree);
+static void grok_function_init (tree, tree);
+static int finish_vtable_vardecl (tree, tree);
+static int prune_vtable_vardecl (tree, tree);
+static void finish_sigtable_vardecl (tree, tree);
+static int is_namespace_ancestor (tree, tree);
+static void add_using_namespace (tree, tree, int);
+static tree ambiguous_decl (tree, tree, tree,int);
+static tree build_anon_union_vars (tree, tree*, int, int);
+static void check_decl_namespace (void);
 
 extern int current_class_depth;
 
@@ -510,191 +503,175 @@ static struct { char *string; int *variable; int on_value;} lang_f_options[] =
    Return the number of strings consumed for a valid option.
    Otherwise return 0.  */
 
-int   
-lang_decode_option (argc, argv)
-     int argc
-#if !USE_CPPLIB
-  ATTRIBUTE_UNUSED
-#endif
-  ;
-     char **argv;
-
+void
+lang_decode_option (char* p)
 {
-  int strings_processed;
-  char *p = argv[0];
-#if USE_CPPLIB
-  strings_processed = cpp_handle_option (&parse_in, argc, argv);
-#else
-  strings_processed = 0;
-#endif /* ! USE_CPPLIB */
-
   if (!strcmp (p, "-ftraditional") || !strcmp (p, "-traditional"))
     /* ignore */;
   else if (p[0] == '-' && p[1] == 'f')
+  {
+    /* Some kind of -f option.
+        P's value is the option sans `-f'.
+        Search for it in the table of options.  */
+    int found = 0;
+    size_t j;
+
+    p += 2;
+    /* Try special -f options.  */
+
+    if (!strcmp (p, "handle-exceptions") || !strcmp (p, "no-handle-exceptions"))
+      warning ("-fhandle-exceptions has been renamed to -fexceptions (and is now on by default)");
+
+    if (!strcmp (p, "memoize-lookups")
+      || !strcmp (p, "no-memoize-lookups")
+      || !strcmp (p, "save-memoized")
+      || !strcmp (p, "no-save-memoized")
+      || !strcmp (p, "no-all-virtual")
+      || !strcmp (p, "no-enum-int-equiv")
+      || !strcmp (p, "nonnull-objects")
+      || !strcmp (p, "ansi-overloading"))
     {
-      /* Some kind of -f option.
-	 P's value is the option sans `-f'.
-	 Search for it in the table of options.  */
-      int found = 0;
-      size_t j;
-
-      p += 2;
-      /* Try special -f options.  */
-
-      if (!strcmp (p, "handle-exceptions")
-	  || !strcmp (p, "no-handle-exceptions"))
-	warning ("-fhandle-exceptions has been renamed to -fexceptions (and is now on by default)");
-
-      if (!strcmp (p, "memoize-lookups")
-	  || !strcmp (p, "no-memoize-lookups")
-	  || !strcmp (p, "save-memoized")
-	  || !strcmp (p, "no-save-memoized")
-	  || !strcmp (p, "no-all-virtual")
-	  || !strcmp (p, "no-enum-int-equiv")
-	  || !strcmp (p, "nonnull-objects")
-          || !strcmp (p, "ansi-overloading"))
-	{
-	  /* ignore */
-	  found = 1;
-	}
-      else if (!strcmp (p, "all-virtual")
-	       || !strcmp (p, "enum-int-equiv")
-	       || !strcmp (p, "no-nonnull-objects")
-	       || !strcmp (p, "no-ansi-overloading"))
-	{
-	  warning ("-f%s is no longer supported", p);
-	  found = 1;
-	}
-      else if (! strcmp (p, "alt-external-templates"))
-	{
-	  flag_external_templates = 1;
-	  flag_alt_external_templates = 1;
-	  found = 1;
-	}
-      else if (! strcmp (p, "no-alt-external-templates"))
-	{
-	  flag_alt_external_templates = 0;
-	  found = 1;
-	}
-      else if (!strcmp (p, "repo"))
-	{
-	  flag_use_repository = 1;
-	  flag_implicit_templates = 0;
-	  found = 1;
-	}
-      else if (!strcmp (p, "guiding-decls"))
-	{
-	  flag_guiding_decls = 1;
-	  name_mangling_version = 0;
-	  found = 1;
-	}
-      else if (!strcmp (p, "no-guiding-decls"))
-	{
-	  flag_guiding_decls = 0;
-	  found = 1;
-	}
-/* CYGNUS LOCAL Embedded C++ */
-      else if (!strcmp (p, "embedded-cxx"))
-	{
-	  flag_embedded_cxx = 1;
-	  flag_rtti = flag_exceptions = 0;
-	  flag_vtable_thunks = 1;
-	  found = 1;
-	}
-      else if (!strcmp (p, "no-embedded-cxx"))
-	{
-	  flag_embedded_cxx = 0;
-	  found = 1;
-	}
-/* END CYGNUS LOCAL Embedded C++ */
-      else if (!strcmp (p, "new-abi"))
-	{
-	  flag_new_abi = 1;
-	  flag_do_squangling = 1;
-	  flag_honor_std = 1;
-	  flag_vtable_thunks = 1;
-	}
-      else if (!strcmp (p, "no-new-abi"))
-	{
-	  flag_new_abi = 0;
-	  flag_do_squangling = 0;
-	  flag_honor_std = 0;
-	}
-      else if (!strncmp (p, "template-depth-", 15))
-	{
-	  char *endp = p + 15;
-	  while (*endp)
-	    {
-	      if (*endp >= '0' && *endp <= '9')
-		endp++;
-	      else
-		{
-		  error ("Invalid option `%s'", p - 2);
-		  goto template_depth_lose;
-		}
-	    }
-	  max_tinst_depth = atoi (p + 15);
-	template_depth_lose: ;
-	}
-      else if (!strncmp (p, "name-mangling-version-", 22))
-	{
-	  char *endp = p + 22;
-	  while (*endp)
-	    {
-	      if (*endp >= '0' && *endp <= '9')
-		endp++;
-	      else
-		{
-		  error ("Invalid option `%s'", p - 2);
-		  goto mangling_version_lose;
-		}
-	    }
-	  name_mangling_version = atoi (p + 22);
-	mangling_version_lose: ;
-	}
-      else for (j = 0;
-		!found && j < sizeof (lang_f_options) / sizeof (lang_f_options[0]);
-		j++)
-	{
-	  if (!strcmp (p, lang_f_options[j].string))
-	    {
-	      *lang_f_options[j].variable = lang_f_options[j].on_value;
-	      /* A goto here would be cleaner,
-		 but breaks the vax pcc.  */
-	      found = 1;
-	    }
-	  if (p[0] == 'n' && p[1] == 'o' && p[2] == '-'
-	      && ! strcmp (p+3, lang_f_options[j].string))
-	    {
-	      *lang_f_options[j].variable = ! lang_f_options[j].on_value;
-	      found = 1;
-	    }
-	}
-      return found;
+      /* ignore */
+      found = 1;
     }
-  else if (p[0] == '-' && p[1] == 'W')
+    else if (!strcmp (p, "all-virtual")
+      || !strcmp (p, "enum-int-equiv")
+      || !strcmp (p, "no-nonnull-objects")
+      || !strcmp (p, "no-ansi-overloading"))
     {
-      int setting = 1;
+      warning ("-f%s is no longer supported", p);
+      found = 1;
+    }
+    else if (! strcmp (p, "alt-external-templates"))
+    {
+      flag_external_templates = 1;
+      flag_alt_external_templates = 1;
+      found = 1;
+    }
+    else if (! strcmp (p, "no-alt-external-templates"))
+    {
+      flag_alt_external_templates = 0;
+      found = 1;
+    }
+    else if (!strcmp (p, "repo"))
+    {
+      flag_use_repository = 1;
+      flag_implicit_templates = 0;
+      found = 1;
+    }
+    else if (!strcmp (p, "guiding-decls"))
+    {
+      flag_guiding_decls = 1;
+      name_mangling_version = 0;
+      found = 1;
+    }
+    else if (!strcmp (p, "no-guiding-decls"))
+    {
+      flag_guiding_decls = 0;
+      found = 1;
+    }
+/* CYGNUS LOCAL Embedded C++ */
+    else if (!strcmp (p, "embedded-cxx"))
+    {
+      flag_embedded_cxx = 1;
+      flag_rtti = flag_exceptions = 0;
+      flag_vtable_thunks = 1;
+      found = 1;
+    }
+    else if (!strcmp (p, "no-embedded-cxx"))
+    {
+      flag_embedded_cxx = 0;
+      found = 1;
+    }
+/* END CYGNUS LOCAL Embedded C++ */
+    else if (!strcmp (p, "new-abi"))
+    {
+      flag_new_abi = 1;
+      flag_do_squangling = 1;
+      flag_honor_std = 1;
+      flag_vtable_thunks = 1;
+    }
+    else if (!strcmp (p, "no-new-abi"))
+    {
+      flag_new_abi = 0;
+      flag_do_squangling = 0;
+      flag_honor_std = 0;
+    }
+    else if (!strncmp (p, "template-depth-", 15))
+    {
+      char *endp = p + 15;
+      while (*endp)
+      {
+        if (*endp >= '0' && *endp <= '9')
+          endp++;
+        else
+        {
+          error ("Invalid option `%s'", p - 2);
+          goto template_depth_lose;
+        }
+      }
+      max_tinst_depth = atoi (p + 15);
+      template_depth_lose: ;
+    }
+    else if (!strncmp (p, "name-mangling-version-", 22))
+    {
+      char *endp = p + 22;
+      while (*endp)
+      {
+        if (*endp >= '0' && *endp <= '9')
+          endp++;
+        else
+        {
+          error ("Invalid option `%s'", p - 2);
+          goto mangling_version_lose;
+        }
+      }
+      name_mangling_version = atoi (p + 22);
+      mangling_version_lose: ;
+    }
+    else for (j = 0;
+      !found && j < sizeof (lang_f_options) / sizeof (lang_f_options[0]);
+      j++)
+    {
+      if (!strcmp (p, lang_f_options[j].string))
+      {
+        *lang_f_options[j].variable = lang_f_options[j].on_value;
+        /* A goto here would be cleaner,
+           but breaks the vax pcc.  */
+        found = 1;
+      }
+      if (p[0] == 'n' && p[1] == 'o' && p[2] == '-'
+        && ! strcmp (p+3, lang_f_options[j].string))
+      {
+        *lang_f_options[j].variable = ! lang_f_options[j].on_value;
+        found = 1;
+      }
+    }
+    return;
+  }
+  else if (p[0] == '-' && p[1] == 'W')
+  {
+    int setting = 1;
 
-      /* The -W options control the warning behavior of the compiler.  */
-      p += 2;
+    /* The -W options control the warning behavior of the compiler.  */
+    p += 2;
 
-      if (p[0] == 'n' && p[1] == 'o' && p[2] == '-')
-	setting = 0, p += 3;
+    if (p[0] == 'n' && p[1] == 'o' && p[2] == '-')
+      setting = 0, p += 3;
 
-      if (!strcmp (p, "implicit"))
-	warn_implicit = setting;
-      else if (!strcmp (p, "long-long"))
-	warn_long_long = setting;
-      else if (!strcmp (p, "return-type"))
-	warn_return_type = setting;
-      else if (!strcmp (p, "ctor-dtor-privacy"))
-	warn_ctor_dtor_privacy = setting;
-      else if (!strcmp (p, "write-strings"))
-	warn_write_strings = setting;
-      else if (!strcmp (p, "cast-qual"))
-	warn_cast_qual = setting;
-      else if (!strcmp (p, "char-subscripts"))
+    if (!strcmp (p, "implicit"))
+      warn_implicit = setting;
+    else if (!strcmp (p, "long-long"))
+      warn_long_long = setting;
+    else if (!strcmp (p, "return-type"))
+      warn_return_type = setting;
+    else if (!strcmp (p, "ctor-dtor-privacy"))
+      warn_ctor_dtor_privacy = setting;
+    else if (!strcmp (p, "write-strings"))
+      warn_write_strings = setting;
+    else if (!strcmp (p, "cast-qual"))
+      warn_cast_qual = setting;
+    else if (!strcmp (p, "char-subscripts"))
 	warn_char_subscripts = setting;
       else if (!strcmp (p, "pointer-arith"))
 	warn_pointer_arith = setting;
@@ -772,22 +749,13 @@ lang_decode_option (argc, argv)
 	  warn_unknown_pragmas = 1;       
 	  warn_nontemplate_friend = setting;           
 	}
-      else return strings_processed;
-    }
-  else if (!strcmp (p, "-ansi"))
-    flag_no_nonansi_builtin = 1, flag_ansi = 1,
-    flag_no_gnu_keywords = 1, flag_operator_names = 1;
-#ifdef SPEW_DEBUG
-  /* Undocumented, only ever used when you're invoking cc1plus by hand, since
-     it's probably safe to assume no sane person would ever want to use this
-     under normal circumstances.  */
-  else if (!strcmp (p, "-spew-debug"))
-    spew_debug = 1;
-#endif
-  else
-    return strings_processed;
-
-  return 1;
+  }
+  else if (!strcmp (p, "-ansi")) {
+    flag_no_nonansi_builtin = 1;
+    flag_ansi = 1;
+    flag_no_gnu_keywords = 1;
+    flag_operator_names = 1;
+  }
 }
 
 /* Incorporate `const' and `volatile' qualifiers for member functions.
@@ -1824,7 +1792,7 @@ tree
 grokoptypename (declspecs, declarator)
      tree declspecs, declarator;
 {
-  tree t = grokdeclarator (declarator, declspecs, TYPENAME, 0, NULL_TREE);
+  tree t = grokdeclarator (declarator, declspecs, TYPENAME_, 0, NULL_TREE);
   return build_typename_overload (t);
 }
 
@@ -2450,7 +2418,7 @@ maybe_make_one_only (decl)
 {
   /* This is not necessary on targets that support weak symbols, because
      the implicit instantiations will defer to the explicit one.  */     
-  if (! supports_one_only () || SUPPORTS_WEAK)
+//  if (! supports_one_only () || SUPPORTS_WEAK)
     return;
 
   /* We can't set DECL_COMDAT on functions, or finish_file will think
@@ -2661,7 +2629,7 @@ finish_vtable_vardecl (prev, vars)
       if (flag_weak)
 	comdat_linkage (vars);
 
-      rest_of_decl_compilation (vars, NULL_PTR, 1, 1);
+      rest_of_decl_compilation (vars, NULL, 1, 1);
 
       if (flag_vtable_gc)
 	output_vtable_inherit (vars);
@@ -2688,8 +2656,8 @@ prune_vtable_vardecl (prev, vars)
 
 int
 walk_vtables (typedecl_fn, vardecl_fn)
-     register void (*typedecl_fn) PROTO ((tree, tree));
-     register int (*vardecl_fn) PROTO ((tree, tree));
+     register void (*typedecl_fn) (tree, tree);
+     register int (*vardecl_fn) (tree, tree);
 {
   tree prev, vars;
   int flag = 0;
@@ -2728,7 +2696,7 @@ finish_sigtable_vardecl (prev, vars)
      for vtables.  Since sigtables, unlike vtables, are always written out,
      that was already done in build_signature_table_constructor.  */
 
-  rest_of_decl_compilation (vars, NULL_PTR, 1, 1);
+  rest_of_decl_compilation (vars, NULL, 1, 1);
 
   /* We know that PREV must be non-zero here.  */
   TREE_CHAIN (prev) = TREE_CHAIN (vars);
@@ -2736,8 +2704,8 @@ finish_sigtable_vardecl (prev, vars)
 
 void
 walk_sigtables (typedecl_fn, vardecl_fn)
-     register void (*typedecl_fn) PROTO((tree, tree));
-     register void (*vardecl_fn) PROTO((tree, tree));
+     register void (*typedecl_fn) (tree, tree);
+     register void (*vardecl_fn) (tree, tree);
 {
   tree prev, vars;
 
@@ -3429,7 +3397,7 @@ finish_file ()
   start_time = get_run_time ();
 
   if (flag_handle_signatures)
-    walk_sigtables ((void (*) PROTO ((tree, tree))) 0,
+    walk_sigtables ((void (*) (tree, tree)) 0,
 		    finish_sigtable_vardecl);
 
   for (fnname = saved_inlines; fnname; fnname = TREE_CHAIN (fnname))
@@ -3458,7 +3426,7 @@ finish_file ()
 	SET_DECL_ARTIFICIAL (vars);
 	pushdecl (vars);
 
-	reconsider |= walk_vtables ((void (*) PROTO((tree, tree))) 0, 
+	reconsider |= walk_vtables ((void (*) (tree, tree)) 0, 
 				    finish_vtable_vardecl);
 
 	while (*p)
@@ -3532,7 +3500,7 @@ finish_file ()
   /* Now delete from the chain of variables all virtual function tables.
      We output them all ourselves, because each will be treated specially.  */
 
-  walk_vtables ((void (*) PROTO((tree, tree))) 0,
+  walk_vtables ((void (*) (tree, tree)) 0,
 		prune_vtable_vardecl);
 
   finish_repo ();
@@ -4387,9 +4355,9 @@ struct arg_lookup
   tree functions;
 };
 
-static int arg_assoc         PROTO((struct arg_lookup*, tree));
-static int arg_assoc_args    PROTO((struct arg_lookup*, tree));
-static int arg_assoc_type    PROTO((struct arg_lookup*, tree));
+static int arg_assoc         (struct arg_lookup*, tree);
+static int arg_assoc_args    (struct arg_lookup*, tree);
+static int arg_assoc_type    (struct arg_lookup*, tree);
 
 /* Add a function to the lookup structure.
    Returns 1 on error.  */

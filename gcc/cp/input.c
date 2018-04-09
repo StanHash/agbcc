@@ -67,16 +67,16 @@ extern int yy_get_token ();
 #define GETC() getc (finput)
 #endif
 
-extern void feed_input PROTO((char *, int));
-extern void put_input PROTO((int));
-extern void put_back PROTO((int));
-extern int getch PROTO((void));
-extern int input_redirected PROTO((void));
+extern void feed_input (char *, int);
+extern void put_input (int);
+extern void put_back (int);
+extern int getch (void);
+extern int input_redirected (void);
 
-static inline struct input_source * allocate_input PROTO((void));
-static inline void free_input PROTO((struct input_source *));
-static inline void end_input PROTO((void));
-static inline int sub_getch PROTO((void));
+static inline struct input_source * allocate_input (void);
+static inline void free_input (struct input_source *);
+static inline void end_input (void);
+static inline int sub_getch (void);
 
 static inline struct input_source *
 allocate_input ()

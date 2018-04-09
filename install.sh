@@ -6,6 +6,7 @@ if [ "$1" != "" ]; then
     mkdir -p $1/tools/agbcc/include
     mkdir -p $1/tools/agbcc/lib
     cp agbcc $1/tools/agbcc/bin/
+    cp agbcxx $1/tools/agbcc/bin/
     cp old_agbcc $1/tools/agbcc/bin/
     cp -R libc/include/ $1/tools/agbcc/ #drop include, because we don't want include/include
     cp ginclude/* $1/tools/agbcc/include/

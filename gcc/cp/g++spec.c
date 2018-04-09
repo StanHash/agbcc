@@ -99,7 +99,7 @@ lang_specific_driver (fn, in_argc, in_argv, in_added_libraries)
   added_libraries = *in_added_libraries;
 
   args = (int *) xmalloc (argc * sizeof (int));
-  bzero ((char *) args, argc * sizeof (int));
+  zero_memory ((char *) args, argc * sizeof (int));
 
   for (i = 1; i < argc; i++)
     {

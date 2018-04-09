@@ -27,8 +27,8 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "toplev.h"
 
-static void add_friend PROTO((tree, tree));
-static void add_friends PROTO((tree, tree, tree));
+static void add_friend (tree, tree);
+static void add_friends (tree, tree, tree);
 
 /* Friend data structures are described in cp-tree.h.  */
 
@@ -454,7 +454,7 @@ do_friend (ctype, declarator, decl, parmdecls, flags, quals, funcdef_flag)
 	    }
 	}
 
-      make_decl_rtl (decl, NULL_PTR, 1);
+      make_decl_rtl (decl, NULL, 1);
       add_friend (current_class_type, 
 		  is_friend_template ? DECL_TI_TEMPLATE (decl) : decl);
       DECL_FRIEND_P (decl) = 1;

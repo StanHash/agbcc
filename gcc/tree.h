@@ -1160,6 +1160,12 @@ struct tree_type
    do not allocate storage, and refer to a definition elsewhere.  */
 #define DECL_EXTERNAL(NODE) (DECL_CHECK (NODE)->decl.external_flag)
 
+/* In a VAR_DECL for a RECORD_TYPE, sets number for non-init_priority
+   initializatons. */
+#define DEFAULT_INIT_PRIORITY 65535
+#define MAX_INIT_PRIORITY 65535
+#define MAX_RESERVED_INIT_PRIORITY 100
+
 /* In a TYPE_DECL
    nonzero means the detail info about this type is not dumped into stabs.
    Instead it will generate cross reference ('x') of names. 
@@ -1221,6 +1227,11 @@ struct tree_type
    argument should be passed in the same way that the first union
    alternative would be passed.  */
 #define DECL_TRANSPARENT_UNION(NODE) (DECL_CHECK (NODE)->decl.transparent_union)
+
+/* Used in FUNCTION_DECLs to indicate that they should be run automatically
+   at the beginning or end of execution.  */
+#define DECL_STATIC_CONSTRUCTOR(NODE) (DECL_CHECK (NODE)->decl.static_ctor_flag)
+#define DECL_STATIC_DESTRUCTOR(NODE) (DECL_CHECK (NODE)->decl.static_dtor_flag)
 
 /* Used to indicate that this DECL represents a compiler-generated entity.  */
 #define DECL_ARTIFICIAL(NODE) (DECL_CHECK (NODE)->decl.artificial_flag)
@@ -1878,6 +1889,8 @@ extern void (*incomplete_decl_finalize_hook)	(tree);
 
 /* In tree.c */
 extern char *perm_calloc			(int, long);
+extern tree get_file_function_name		(int);
+extern tree get_file_function_name_long 	(char *);
 extern tree get_set_constructor_bits		(tree, char *, int);
 extern tree get_set_constructor_bytes		(tree,
 						       unsigned char *, int);
@@ -1978,6 +1991,35 @@ extern tree invert_truthvalue	(tree);
 
 extern int dwarf2out_do_frame		(void);
 
+/* Generate a new label for the CFI info to refer to.  */
+
+extern char *dwarf2out_cfi_label	(void);
+
+/* Entry point to update the canonical frame address (CFA).  */
+
+extern void dwarf2out_def_cfa		(char *, unsigned, long);
+
+/* Add the CFI for saving a register window.  */
+
+extern void dwarf2out_window_save	(char *);
+
+/* Add a CFI to update the running total of the size of arguments pushed
+   onto the stack.  */
+
+extern void dwarf2out_args_size		(char *, long);
+
+/* Entry point for saving a register to the stack.  */
+
+extern void dwarf2out_reg_save		(char *, unsigned, long);
+
+/* Entry point for saving the return address in the stack.  */
+
+extern void dwarf2out_return_save	(char *, long);
+
+/* Entry point for saving the return address in a register.  */
+
+extern void dwarf2out_return_reg	(char *, unsigned);
+
 /* Output a marker (i.e. a label) for the beginning of a function, before
    the prologue.  */
 
@@ -1990,16 +2032,31 @@ extern void dwarf2out_end_epilogue	(void);
 
 /* The language front-end must define these functions.  */
 
+/* Function of no arguments for initializing options.  */
+extern void lang_init_options			(void);
+
 /* Function of no arguments for initializing lexical scanning.  */
 extern void init_lex				(void);
 /* Function of no arguments for initializing the symbol table.  */
 extern void init_decl_processing		(void);
+
+/* Functions called with no arguments at the beginning and end or processing
+   the input source file.  */
+extern void lang_init				(void);
+extern void lang_finish				(void);
+
+/* Function to identify which front-end produced the output file. */
+extern char *lang_identify			(void);
 
 /* Function to replace the DECL_LANG_SPECIFIC field of a DECL with a copy.  */
 extern void copy_lang_decl			(tree);
 
 /* Function called with no arguments to parse and compile the input.  */
 extern int yyparse				(void);
+/* Function called with option as argument
+   to decode options starting with -f or -W or +.
+   It should return nonzero if it handles the option.  */
+extern void lang_decode_option			(char*);
 
 /* Functions for processing symbol declarations.  */
 /* Function to enter a new lexical scope.
@@ -2066,6 +2123,7 @@ extern void preserve_momentary		(void);
 extern void saveable_allocation		(void);
 extern void temporary_allocation	(void);
 extern void resume_temporary_allocation	(void);
+extern tree get_file_function_name	(int);
 extern void set_identifier_size		(int);
 extern int int_fits_type_p		(tree, tree);
 extern int tree_log2			(tree);
@@ -2167,6 +2225,9 @@ extern struct rtx_def *emit_line_note_force	(char *, int);
 extern int mark_addressable		(tree);
 extern void incomplete_type_error	(tree, tree);
 
+/* In c-lang.c */
+extern void print_lang_statistics	(void);
+
 /* In c-common.c */
 extern tree truthvalue_conversion	(tree);
 extern int min_precision		(tree, int);
@@ -2195,6 +2256,8 @@ extern void fixup_signed_type		(tree);
 
 /* varasm.c */
 extern void make_decl_rtl		(tree, char *, int);
+extern void make_decl_one_only		(tree);
+extern int supports_one_only		(void);
 extern void variable_section		(tree, int);
 
 /* In fold-const.c */
@@ -2231,12 +2294,45 @@ extern HOST_WIDE_INT all_cases_count	(tree, int *);
 extern void check_for_full_enumeration_handling (tree);
 extern void declare_nonlocal_label	(tree);
 
+/* If KIND=='I', return a suitable global initializer (constructor) name.
+   If KIND=='D', return a suitable global clean-up (destructor) name.  */
+extern tree get_file_function_name (int);
+
 /* Interface of the DWARF2 unwind info support.  */
 
 /* Decide whether we want to emit frame unwind information for the current
    translation unit.  */
 
 extern int dwarf2out_do_frame		(void);
+
+/* Generate a new label for the CFI info to refer to.  */
+
+extern char *dwarf2out_cfi_label	(void);
+
+/* Entry point to update the canonical frame address (CFA).  */
+
+extern void dwarf2out_def_cfa		(char *, unsigned, long);
+
+/* Add the CFI for saving a register window.  */
+
+extern void dwarf2out_window_save	(char *);
+
+/* Add a CFI to update the running total of the size of arguments pushed
+   onto the stack.  */
+
+extern void dwarf2out_args_size		(char *, long);
+
+/* Entry point for saving a register to the stack.  */
+
+extern void dwarf2out_reg_save		(char *, unsigned, long);
+
+/* Entry point for saving the return address in the stack.  */
+
+extern void dwarf2out_return_save	(char *, long);
+
+/* Entry point for saving the return address in a register.  */
+
+extern void dwarf2out_return_reg	(char *, unsigned);
 
 /* Output a marker (i.e. a label) for the beginning of a function, before
    the prologue.  */

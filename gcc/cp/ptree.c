@@ -46,17 +46,17 @@ print_lang_decl (file, node, indent)
   if (DECL_MAIN_VARIANT (node))
     {
       fprintf (file, " decl-main-variant ");
-      fprintf (file, HOST_PTR_PRINTF, DECL_MAIN_VARIANT (node));
+      fprintf (file, "%p", DECL_MAIN_VARIANT (node));
     }
   if (DECL_PENDING_INLINE_INFO (node))
     {
       fprintf (file, " pending-inline-info ");
-      fprintf (file, HOST_PTR_PRINTF, DECL_PENDING_INLINE_INFO (node));
+      fprintf (file, "%p", DECL_PENDING_INLINE_INFO (node));
     }
   if (DECL_TEMPLATE_INFO (node))
     {
       fprintf (file, " template-info ");
-      fprintf (file, HOST_PTR_PRINTF,  DECL_TEMPLATE_INFO (node));
+      fprintf (file, "%p",  DECL_TEMPLATE_INFO (node));
     }
 }
 
@@ -169,7 +169,7 @@ lang_print_xnode (file, node, indent)
     {
     case CPLUS_BINDING:
       fprintf (file, " scope ");
-      fprintf (file, HOST_PTR_PRINTF, BINDING_SCOPE (node));
+      fprintf (file, "%p", BINDING_SCOPE (node));
       print_node (file, "value", BINDING_VALUE (node), indent+4);
       print_node (file, "chain", TREE_CHAIN (node), indent+4);
       break;

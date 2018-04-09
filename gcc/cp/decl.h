@@ -26,12 +26,12 @@ enum decl_context
   CATCHPARM,			/* Declaration of catch parm */
   FIELD,			/* Declaration inside struct or union */
   BITFIELD,			/* Likewise but with specified width */
-  TYPENAME,			/* Typename (inside cast or sizeof)  */
+  TYPENAME_,			/* Typename (inside cast or sizeof)  */
   MEMFUNCDEF			/* Member function definition */
 };
 
 /* We need this in here to get the decl_context definition.  */
-extern tree grokdeclarator			PROTO((tree, tree, enum decl_context, int, tree));
+extern tree grokdeclarator			(tree, tree, enum decl_context, int, tree);
 
 /* C++: Keep these around to reduce calls to `get_identifier'.
    Identifiers for `this' in member functions and the auto-delete

@@ -161,12 +161,25 @@ struct lang_type
    an explicit loop over that iterator.  */
 #define ITERATOR_BOUND_P(NODE) ((NODE)->common.readonly_flag)
 
+/* in c-lang.c and objc-act.c */
+extern tree lookup_interface			(tree);
+extern tree is_class_name			(tree);
+extern void maybe_objc_check_decl		(tree);
+extern void finish_file				(void);
+extern int maybe_objc_comptypes                 (tree, tree, int);
+extern tree maybe_building_objc_message_expr    (void);
+extern tree maybe_objc_method_name		(tree);
+extern int recognize_objc_keyword		(void);
+extern tree build_objc_string			(int, char *);
+
 /* in c-aux-info.c */
 extern void gen_aux_info_record                 (tree, int, int, int);
 
 /* in c-common.c */
 extern void declare_function_name               (void);
 extern void decl_attributes                     (tree, tree, tree);
+extern void init_function_format_info		(void);
+extern void check_function_format		(tree, tree, tree);
 extern int c_get_alias_set                      (tree);
 extern void c_apply_type_quals_to_decl          (int, tree);
 /* Print an error message for invalid operands to arith operation CODE.
@@ -408,6 +421,10 @@ extern int current_function_returns_null;
 
 extern int skip_evaluation;
 
+/* Nonzero means `$' can be in an identifier.  */
+
+extern int dollars_in_ident;
+
 /* Nonzero means allow type mismatches in conditional expressions;
    just make their values `void'.   */
 
@@ -476,6 +493,10 @@ extern int warn_missing_noreturn;
 
 extern int warn_traditional;
 
+/* Warn about *printf or *scanf format/argument anomalies. */
+
+extern int warn_format;
+
 /* Warn about a subscript that has type char.  */
 
 extern int warn_char_subscripts;
@@ -519,6 +540,14 @@ extern int warn_multichar;
 /* Warn about long long.  */
 
 extern int warn_long_long;
+
+/* Nonzero means we are reading code that came from a system header file.  */
+
+extern int system_header_p;
+
+/* Nonzero enables objc features.  */
+
+extern int doing_objc_thang;
 
 /* In c-decl.c */
 extern void finish_incomplete_decl (tree);

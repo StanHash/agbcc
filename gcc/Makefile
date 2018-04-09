@@ -37,65 +37,96 @@ RTLANAL_OBJS = rtlanal.o
 PRINT_SRCS = print-rtl.c
 PRINT_OBJS = print-rtl.o
 
-SRCS = toplev.c version.c tree.c print-tree.c stor-layout.c fold-const.c \
-function.c stmt.c except.c expr.c calls.c expmed.c explow.c optabs.c \
-varasm.c emit-rtl.c genrtl.c real.c regmove.c dwarf2out.c alias.c integrate.c \
-jump.c cse.c loop.c unroll.c flow.c stupid.c combine.c varray.c regclass.c \
-local-alloc.c global.c reload.c reload1.c caller-save.c gcse.c insn-peep.c \
-final.c recog.c insn-opinit.c insn-recog.c insn-extract.c insn-output.c \
-insn-emit.c lcm.c insn-attrtab.c thumb.c getpwd.c convert.c dyn-string.c \
-splay-tree.c graph.c sbitmap.c resource.c c-parse.c c-lex.c c-decl.c \
-c-typeck.c c-convert.c c-aux-info.c c-common.c c-iterate.c
+# Sources common to all compilers
+BASE_SRCS := toplev.c version.c tree.c print-tree.c stor-layout.c fold-const.c \
+  function.c stmt.c except.c expr.c calls.c expmed.c explow.c optabs.c \
+  varasm.c emit-rtl.c genrtl.c real.c regmove.c dwarf2out.c alias.c integrate.c \
+  jump.c cse.c loop.c unroll.c flow.c stupid.c combine.c varray.c regclass.c \
+  local-alloc.c global.c reload.c reload1.c caller-save.c gcse.c insn-peep.c \
+  final.c recog.c insn-opinit.c insn-recog.c insn-extract.c insn-output.c \
+  insn-emit.c lcm.c insn-attrtab.c thumb.c getpwd.c convert.c dyn-string.c \
+  splay-tree.c graph.c sbitmap.c resource.c c-aux-info.c c-common.c c-iterate.c
 
-OBJS = $(SRCS:.c=.o)
+# Sources specific to the C compiler(s)
+CC_SRCS := c-options.c c-parse.c c-lex.c c-decl.c c-lang.c c-typeck.c c-convert.c
 
-GENERATED = genrtl.c genrtl.h \
- insn-peep.c insn-opinit.c insn-recog.c insn-extract.c insn-output.c \
- insn-emit.c insn-attrtab.c \
- tree-check.h \
- insn-config.h insn-flags.h insn-codes.h insn-attr.h
+# Sources specific to the C++ compiler
+CXX_SRCS := hash.c cp/cp-options.c cp/call.c cp/decl.c cp/errfn.c cp/expr.c cp/pt.c cp/sig.c cp/typeck2.c \
+  cp/class.c cp/decl2.c cp/error.c cp/lex.c cp/parse.c cp/ptree.c cp/rtti.c cp/spew.c cp/typeck.c cp/cvt.c \
+  cp/except.c cp/friend.c cp/init.c cp/method.c cp/search.c cp/semantics.c cp/tree.c cp/xref.c cp/repo.c
 
-.PHONY: normal old clean
+BASE_OBJS := $(BASE_SRCS:.c=.o)
+CC_OBJS   := $(CC_SRCS:.c=.o)
+CXX_OBJS  := $(CXX_SRCS:.c=.o)
 
-# The usual compiler.
-normal: CFLAGS = $(BASE_CFLAGS)
-normal: $(OBJS)
-	$(CC) $(CFLAGS) -o agbcc $(OBJS) $(RTL_OBJS) $(PRINT_OBJS) $(RTLANAL_OBJS)
+# All non-rtl sources/objects
+ALL_SRCS  := $(BASE_SRCS) $(CC_SRCS) $(CXX_SRCS)
+ALL_OBJS  := $(BASE_OBJS) $(CC_OBJS) $(CXX_OBJS)
 
-# The old version of the compiler, used for building libgcc.
-old: CFLAGS = $(BASE_CFLAGS) -DOLD_COMPILER
-old: $(OBJS)
-	$(CC) $(CFLAGS) -o old_agbcc $(OBJS) $(RTL_OBJS) $(PRINT_OBJS) $(RTLANAL_OBJS)
+GENERATED := genrtl.c genrtl.h \
+  insn-peep.c insn-opinit.c insn-recog.c insn-extract.c insn-output.c \
+  insn-emit.c insn-attrtab.c \
+  tree-check.h \
+  insn-config.h insn-flags.h insn-codes.h insn-attr.h
+
+.PHONY: cc_normal cc_old cxx_normal clean
+
+# The usual C compiler.
+cc_normal: CFLAGS = $(BASE_CFLAGS)
+cc_normal: $(BASE_OBJS) $(CC_OBJS)
+	$(CC) $(CFLAGS) -o agbcc $(BASE_OBJS) $(CC_OBJS) $(RTL_OBJS) $(PRINT_OBJS) $(RTLANAL_OBJS)
+
+# The old version of the C compiler, used for building libgcc.
+cc_old: CFLAGS = $(BASE_CFLAGS) -DOLD_COMPILER
+cc_old: $(BASE_OBJS) $(CC_OBJS)
+	$(CC) $(CFLAGS) -o old_agbcc $(BASE_OBJS) $(CC_OBJS) $(RTL_OBJS) $(PRINT_OBJS) $(RTLANAL_OBJS)
+
+# The C++ compiler.
+cxx_normal: CFLAGS = $(BASE_CFLAGS)
+cxx_normal: $(BASE_OBJS) $(CXX_OBJS)
+	$(CC) $(CFLAGS) -o agbcxx $(BASE_OBJS) $(CXX_OBJS) $(RTL_OBJS) $(PRINT_OBJS) $(RTLANAL_OBJS)
 
 # Clear suffixes.
 .SUFFIXES:
 
+# I'm sorry for causing such a mess here, but with the addition of a source subfolder (cp),
+# I had to change things a bit. Basically all the new stuff are to transform source paths
+# (ex: cp/decl.c) into "identifiers" that replace slashes with underscores (ex: cp_decl)
+# That way, we still have one single dep directory, but files with the same name in different
+# subdirectories won't have conflicting dependency files.
+#  -Stan
+
 DEPDIR := .d
 $(shell mkdir -p $(DEPDIR) >/dev/null)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+
+# Helper dependency file name generator
+DEPNAME  = $(DEPDIR)/$(subst /,_,$*)
+
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPNAME).Td -MT $(DEPNAME).d
 
 COMPILE = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c
-POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+POSTCOMPILE = mv -f $(DEPNAME).Td $(DEPNAME).d
 
-$(OBJS): %.o: %.c $(DEPDIR)/%.d | $(GENERATED)
-	$(COMPILE) $<
+$(ALL_OBJS): %.o: %.c | $(GENERATED)
+	$(COMPILE) $< -o $@
 	$(POSTCOMPILE)
 
-$(RTL_OBJS) $(RTLANAL_OBJS) $(PRINT_OBJS): %.o: %.c $(DEPDIR)/%.d
+$(RTL_OBJS) $(RTLANAL_OBJS) $(PRINT_OBJS): %.o: %.c
 	$(COMPILE) $<
 	$(POSTCOMPILE)
 
 $(DEPDIR)/%.d: ;
 .PRECIOUS: $(DEPDIR)/%.d
 
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
+# Include all dependency files
+-include $(patsubst %.c,$(DEPDIR)/%.d,$(subst /,_,$(ALL_SRCS)))
 
 GEN = genemit genoutput genrecog genextract genflags gencodes genconfig \
 genpeep gengenrtl gencheck genattr genattrtab genopinit
 
 clean:
-	$(RM) agbcc agbcc.exe old_agbcc old_agbcc.exe
-	$(RM) $(OBJS) $(RTL_OBJS) $(RTLANAL_OBJS) $(PRINT_OBJS)
+	$(RM) agbcc agbcc.exe old_agbcc old_agbcc.exe agbcxx agbcxx.exe
+	$(RM) $(BASE_OBJS) $(CC_OBJS) $(CXX_OBJS) $(RTL_OBJS) $(RTLANAL_OBJS) $(PRINT_OBJS)
 	$(RM) $(GENERATED)
 	$(RM) $(GEN) $(addsuffix .exe,$(GEN)) $(addsuffix .o,$(GEN))
 	$(RM) s-config s-flags s-codes s-emit s-recog s-opinit s-extract s-peep \

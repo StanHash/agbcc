@@ -47,6 +47,10 @@ Boston, MA 02111-1307, USA.  */
 #define TRAMPOLINE_ALIGNMENT FUNCTION_BOUNDARY
 #endif
 
+#ifndef ASM_STABS_OP
+#define ASM_STABS_OP ".stabs"
+#endif
+
 /* Define the prefix to use when check_memory_usage_flag is enable.  */
 #ifdef NO_DOLLAR_IN_LABEL
 #ifdef NO_DOT_IN_LABEL
@@ -76,6 +80,10 @@ Boston, MA 02111-1307, USA.  */
 /* File in which assembler code is being written.  */
 
 extern FILE *asm_out_file;
+
+/* The (assembler) name of the first globally-visible object output.  */
+char *first_global_object_name;
+char *weak_global_object_name;
 
 extern struct obstack *current_obstack;
 extern struct obstack *saveable_obstack;
@@ -188,7 +196,7 @@ data_section ()
 {
   if (in_section != in_data)
     {
-	fprintf (asm_out_file, "%s\n", DATA_SECTION_ASM_OP);
+	  fprintf (asm_out_file, "%s\n", DATA_SECTION_ASM_OP);
 
       in_section = in_data;
     }
@@ -429,7 +437,7 @@ exception_section ()
 #ifdef ASM_OUTPUT_SECTION_NAME
   named_section (NULL_TREE, ".gcc_except_table", 0);
 #else
-  readonly_data_section ();
+    readonly_data_section ();
 #endif
 #endif
 }
@@ -812,6 +820,51 @@ assemble_asm (string)
   fprintf (asm_out_file, "\t%s\n", TREE_STRING_POINTER (string));
 }
 
+/* Record an element in the table of global destructors.
+   How this is done depends on what sort of assembler and linker
+   are in use.
+
+   NAME should be the name of a global function to be called
+   at exit time.  This name is output using assemble_name.  */
+
+void
+assemble_destructor (name)
+     char *name;
+{
+#ifdef ASM_OUTPUT_DESTRUCTOR
+  ASM_OUTPUT_DESTRUCTOR (asm_out_file, name);
+#else
+  if (flag_gnu_linker)
+    {
+      /* Now tell GNU LD that this is part of the static destructor set.  */
+      /* This code works for any machine provided you use GNU as/ld.  */
+      fprintf (asm_out_file, "%s \"___DTOR_LIST__\",22,0,0,", ASM_STABS_OP);
+      assemble_name (asm_out_file, name);
+      fputc ('\n', asm_out_file);
+    }
+#endif
+}
+
+/* Likewise for global constructors.  */
+
+void
+assemble_constructor (name)
+     char *name;
+{
+#ifdef ASM_OUTPUT_CONSTRUCTOR
+  ASM_OUTPUT_CONSTRUCTOR (asm_out_file, name);
+#else
+  if (flag_gnu_linker)
+    {
+      /* Now tell GNU LD that this is part of the static constructor set.  */
+      /* This code works for any machine provided you use GNU as/ld.  */
+      fprintf (asm_out_file, "%s \"___CTOR_LIST__\",22,0,0,", ASM_STABS_OP);
+      assemble_name (asm_out_file, name);
+      fputc ('\n', asm_out_file);
+    }
+#endif
+}
+
 /* CONSTANT_POOL_BEFORE_FUNCTION may be defined as an expression with
    a non-zero value if the constant pool should be output before the
    start of the function, or a zero value if the pool should output
@@ -871,6 +924,21 @@ assemble_start_function (decl, fnname)
 
   if (TREE_PUBLIC (decl))
     {
+      if (! first_global_object_name)
+	{
+	  char *p;
+	  char **name;
+
+	  if (! DECL_WEAK (decl) && ! DECL_ONE_ONLY (decl))
+	    name = &first_global_object_name;
+	  else
+	    name = &weak_global_object_name;
+
+	  STRIP_NAME_ENCODING (p, fnname);
+	  *name = permalloc (strlen (p) + 1);
+	  strcpy (*name, p);
+	}
+
 #ifdef ASM_WEAKEN_LABEL
       if (DECL_WEAK (decl))
 	ASM_WEAKEN_LABEL (asm_out_file, fnname);
@@ -1182,6 +1250,20 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
     }
 
   name = XSTR (XEXP (DECL_RTL (decl), 0), 0);
+
+  if (TREE_PUBLIC (decl) && DECL_NAME (decl)
+      && ! first_global_object_name
+      && ! (DECL_COMMON (decl) && (DECL_INITIAL (decl) == 0
+				   || DECL_INITIAL (decl) == error_mark_node))
+      && ! DECL_WEAK (decl)
+      && ! DECL_ONE_ONLY (decl))
+    {
+      char *p;
+
+      STRIP_NAME_ENCODING (p, name);
+      first_global_object_name = permalloc (strlen (p) + 1);
+      strcpy (first_global_object_name, p);
+    }
 
   /* Compute the alignment of this data.  */
 
@@ -1833,7 +1915,7 @@ immed_real_const_1 (d, mode)
   /* Search the chain for an existing CONST_DOUBLE with the right value.
      If one is found, return it.  */
 
-    for (r = const_double_chain; r; r = CONST_DOUBLE_CHAIN (r))
+  for (r = const_double_chain; r; r = CONST_DOUBLE_CHAIN (r))
     {
         for (int i = 0; i < sizeof (REAL_VALUE_TYPE) / sizeof (HOST_WIDE_INT); i++)
             if (u.i[i] != XWINT(r, 2 + i))
@@ -1856,7 +1938,7 @@ immed_real_const_1 (d, mode)
   r = rtx_alloc (CONST_DOUBLE);
   PUT_MODE (r, mode);
   for (int i = 0; i < sizeof (REAL_VALUE_TYPE) / sizeof (HOST_WIDE_INT); i++)
-      XWINT(r, 2 + i) = u.i[i];
+    XWINT(r, 2 + i) = u.i[i];
   pop_obstacks ();
 
   /* Don't touch const_double_chain in nested function; see force_const_mem.
@@ -3397,7 +3479,7 @@ output_constant_pool (fnname, fndecl)
 	case MODE_FLOAT:
 	  if (GET_CODE (x) != CONST_DOUBLE)
 	    abort ();
-      
+
       for (int i = 0; i < sizeof (REAL_VALUE_TYPE) / sizeof (HOST_WIDE_INT); i++)
           u.i[i] = XWINT(x, 2 + i);
 
@@ -3914,7 +3996,7 @@ output_constructor (exp, size)
 		 (all part of the same byte).  */
 	      this_time = MIN (end_offset - next_offset,
 			       BITS_PER_UNIT - next_bit);
-
+             
 		  /* On little-endian machines,
 		     take first the least significant bits of the value
 		     and pack them starting at the least significant
@@ -4018,4 +4100,34 @@ assemble_alias (decl, target)
   warning ("alias definitions not supported in this configuration; ignored");
 #endif
 #endif
+}
+
+/* Returns 1 if the target configuration supports defining public symbols
+   so that one of them will be chosen at link time instead of generating a
+   multiply-defined symbol error, whether through the use of weak symbols or
+   a target-specific mechanism for having duplicates discarded.  */
+
+int
+supports_one_only ()
+{
+  return 1;
+}
+
+/* Set up DECL as a public symbol that can be defined in multiple
+   translation units without generating a linker error.  */
+
+void
+make_decl_one_only (decl)
+     tree decl;
+{
+  if (TREE_CODE (decl) != VAR_DECL && TREE_CODE (decl) != FUNCTION_DECL)
+    abort ();
+
+  TREE_PUBLIC (decl) = 1;
+
+  if (TREE_CODE (decl) == VAR_DECL
+      && (DECL_INITIAL (decl) == 0 || DECL_INITIAL (decl) == error_mark_node))
+    DECL_COMMON (decl) = 1;
+  else
+    DECL_WEAK (decl) = 1;
 }

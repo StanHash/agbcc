@@ -40,6 +40,7 @@
 #include "except.h"
 #include "toplev.h"
 #include "expr.h"
+#include "options.h"
 
 #if defined (DWARF2_DEBUGGING_INFO)
 #include "dwarf2out.h"
@@ -276,6 +277,10 @@ int loud_flag = 0;
 
 /* -f flags.  */
 
+/* Nonzero means `char' should be signed.  */
+
+int flag_signed_char;
+
 /* Nonzero means give an enum type only as many bytes as it needs.  */
 
 int flag_short_enums;
@@ -486,6 +491,13 @@ int flag_new_exceptions = 0;
 
 int flag_no_common;
 
+/* flag_schedule_insns means schedule insns within basic blocks (before
+   local_alloc).
+   flag_schedule_insns_after_reload means schedule insns after
+   global_alloc.  */
+
+int flag_schedule_insns = 0;
+
 /* Nonzero means pretend it is OK to examine bits of target floats,
    even if that isn't true.  The resulting code will have incorrect constants,
    but the same series of instructions that the native compiler would make.  */
@@ -529,6 +541,11 @@ int flag_verbose_asm = 0;
    to be a catchall for printing debug information in the assembler file.  */
 
 int flag_debug_asm = 0;
+
+/* -fgnu-linker specifies use of the GNU linker for initializations.
+   (Or, more generally, a linker that handles initializations.)
+   -fno-gnu-linker says that collect2 will be used.  */
+int flag_gnu_linker = 1;
 
 /* CYGNUS LOCAL unaligned-struct-hack */
 /* This is a hack.  Disable the effect of SLOW_BYTE_ACCESS, so that references
@@ -726,108 +743,6 @@ lang_independent_options f_options[] =
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
-
-/* Table of language-specific options.  */
-
-static struct lang_opt
-{
-    char *option;
-    char *description;
-}
-documented_lang_options[] =
-{
-    /* In order not to overload the --help output, the convention
-       used here is to only describe those options which are not
-       enabled by default.  */
-
-    { "-ansi", "Compile just for ANSI C" },
-    { "-fallow-single-precision",
-      "Do not promote floats to double if using -traditional" },
-    { "-std= ", "Determine language standard"},
-
-    { "-fsigned-bitfields", "" },
-    { "-funsigned-bitfields","Make bitfields by unsigned by default" },
-    { "-fno-signed-bitfields", "" },
-    { "-fno-unsigned-bitfields","" },
-
-    { "-ftraditional", "" },
-    { "-traditional", "Attempt to support traditional K&R style C"},
-    { "-fnotraditional", "" },
-    { "-fno-traditional", "" },
-
-    { "-fasm", "" },
-    { "-fno-asm", "Do not recognise the 'asm' keyword" },
-    { "-fbuiltin", "" },
-    { "-fno-builtin", "Do not recognise any built in functions" },
-    { "-fhosted", "Assume normal C execution environment" },
-    { "-fno-hosted", "" },
-    { "-ffreestanding",
-      "Assume that standard libraries & main might not exist" },
-    { "-fno-freestanding", "" },
-    { "-fcond-mismatch", "Allow different types as args of ? operator"},
-    { "-fno-cond-mismatch", "" },
-    { "-fident", "" },
-    { "-fno-ident", "Ignore #ident directives" },
-    { "-fshort-double", "Use the same size for double as for float" },
-    { "-fno-short-double", "" },
-    { "-fshort-enums", "Use the smallest fitting integer to hold enums"},
-    { "-fno-short-enums", "" },
-
-    { "-Wall", "Enable most warning messages" },
-    { "-Wbad-function-cast",
-      "Warn about casting functions to incompatible types" },
-    { "-Wno-bad-function-cast", "" },
-    { "-Wmissing-noreturn",
-      "Warn about functions which might be candidates for attribute noreturn" },
-    { "-Wno-missing-noreturn", "" },
-    { "-Wcast-qual", "Warn about casts which discard qualifiers"},
-    { "-Wno-cast-qual", "" },
-    { "-Wchar-subscripts", "Warn about subscripts whose type is 'char'"},
-    { "-Wno-char-subscripts", "" },
-    { "-Wconversion", "Warn about possibly confusing type conversions" },
-    { "-Wno-conversion", "" },
-    { "-Wformat", "Warn about printf format anomalies" },
-    { "-Wno-format", "" },
-    { "-Wimplicit-function-declaration",
-      "Warn about implicit function declarations" },
-    { "-Wno-implicit-function-declaration", "" },
-    { "-Werror-implicit-function-declaration", "" },
-    { "-Wimplicit-int", "Warn when a declaration does not specify a type" },
-    { "-Wno-implicit-int", "" },
-    { "-Wimplicit", "" },
-    { "-Wno-implicit", "" },
-    { "-Wimport", "Warn about the use of the #import directive" },
-    { "-Wno-import", "" },
-    { "-Wlong-long","" },
-    { "-Wno-long-long", "Do not warn about using 'long long' when -pedantic" },
-    { "-Wmissing-braces",
-      "Warn about possibly missing braces around initialisers" },
-    { "-Wno-missing-braces", "" },
-    { "-Wmissing-declarations",
-      "Warn about global funcs without previous declarations"},
-    { "-Wno-missing-declarations", "" },
-    { "-Wmissing-prototypes", "Warn about global funcs without prototypes" },
-    { "-Wno-missing-prototypes", "" },
-    { "-Wmultichar", "Warn about use of multicharacter literals"},
-    { "-Wno-multichar", "" },
-    { "-Wnested-externs", "Warn about externs not at file scope level" },
-    { "-Wno-nested-externs", "" },
-    { "-Wparentheses", "Warn about possible missing parentheses" },
-    { "-Wno-parentheses", "" },
-    { "-Wpointer-arith", "Warn about function pointer arithmetic" },
-    { "-Wno-pointer-arith", "" },
-    { "-Wredundant-decls",
-      "Warn about multiple declarations of the same object" },
-    { "-Wno-redundant-decls", "" },
-    { "-Wsign-compare", "Warn about signed/unsigned comparisons" },
-    { "-Wno-sign-compare", "" },
-    { "-Wstrict-prototypes", "Warn about non-prototyped function decls" },
-    { "-Wno-strict-prototypes", "" },
-    { "-Wtraditional", "Warn about constructs whose meaning change in ANSI C"},
-    { "-Wno-traditional", "" },
-    { "-Wwrite-strings", "Mark strings as 'const char *'"},
-    { "-Wno-write-strings", "" },
-};
 
 /* Here is a table, controlled by the tm.h file, listing each -m switch
    and which bits in `target_switches' it should set or clear.
@@ -2088,8 +2003,9 @@ compile_file(char *name)
     input_file_stack->next = 0;
     input_file_stack->name = input_filename;
 
-    /* This may set main_input_filename.  */
-    check_line_directive();
+    /* Perform language-specific initialization.
+        This may set main_input_filename.  */
+    lang_init ();
 
     /* If the input doesn't start with a #line, use the input name
        as the official input file name.  */
@@ -2371,7 +2287,9 @@ compile_file(char *name)
     ASM_FILE_END(asm_out_file);
 #endif
 
+    /* Language-specific end of compilation actions.  */
 finish_syntax:
+    lang_finish();
 
     /* Close the dump files.  */
 
@@ -3334,14 +3252,16 @@ display_help()
        that the description string is in fact the name of a language, whose
        language specific options are to follow.  */
 
-    if (NUM_ELEM(documented_lang_options) > 1)
+    struct lang_opt* it = documented_lang_options;
+
+    if (it->option || it->description)
     {
         printf("\nLanguage specific options:\n");
 
-        for (i = 0; i < NUM_ELEM(documented_lang_options); i++)
+        for (; it->option || it->description; it++)
         {
-            char * description = documented_lang_options[i].description;
-            char * option      = documented_lang_options[i].option;
+            char * description = it->description;
+            char * option      = it->option;
 
             if (description == NULL)
             {
@@ -3538,6 +3458,9 @@ main(int argc, char **argv)
     flag_short_enums = DEFAULT_SHORT_ENUMS;
 #endif
 
+    /* Perform language-specific options intialization. */
+    lang_init_options ();
+
     /* Scan to see what optimization level has been specified.  That will
        determine the default value of many flags.  */
     for (i = 1; i < argc; i++)
@@ -3626,17 +3549,17 @@ main(int argc, char **argv)
             exit(0);
         }
 
-        size_t j;
+        struct lang_opt* it;
 
         /* If this is a language-specific option,
-           decode it in a language-specific way.  */
-        for (j = NUM_ELEM(documented_lang_options); j--; )
-            if (check_lang_option(argv[i], documented_lang_options[j].option))
+            decode it in a language-specific way.  */
+        for (it = documented_lang_options; it->option || it->description; it++)
+            if (check_lang_option(argv[i], it->option))
                 break;
 
-        if (j != (size_t)-1)
+        if (it->option || it->description)
         {
-            c_decode_option(argv[i]);
+            lang_decode_option(argv[i]);
         }
         else if (argv[i][0] == '-' && argv[i][1] != 0)
         {
@@ -3740,6 +3663,7 @@ main(int argc, char **argv)
             {
                 char *p = &str[1];
                 int found = 0;
+                size_t j;
 
                 /* Some kind of -f option.
                    P's value is the option sans `-f'.
@@ -3811,6 +3735,7 @@ main(int argc, char **argv)
             {
                 char *p = &str[1];
                 int found = 0;
+                size_t j;
 
                 /* Some kind of -W option.
                    P's value is the option sans `-W'.

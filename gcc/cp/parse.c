@@ -281,7 +281,7 @@ extern int end_of_file;
    error message if the user supplies an empty conditional expression.  */
 static char *cond_stmt_keyword;
 
-static tree empty_parms PROTO((void));
+static tree empty_parms (void);
 
 /* Nonzero if we have an `extern "C"' acting as an extern specifier.  */
 int have_extern_spec;
@@ -361,8 +361,8 @@ static tree current_enum_type;
 /* Tell yyparse how to print a token's value, if yydebug is set.  */
 
 #define YYPRINT(FILE,YYCHAR,YYLVAL) yyprint(FILE,YYCHAR,YYLVAL)
-extern void yyprint			PROTO((FILE *, int, YYSTYPE));
-extern tree combine_strings		PROTO((tree));
+extern void yyprint			(FILE *, int, YYSTYPE);
+extern tree combine_strings		(tree);
 
 static int
 parse_decl(declarator, specs_attrs, attributes, initialized, decl)

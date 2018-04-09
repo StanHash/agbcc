@@ -33,35 +33,34 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "except.h"
 #include "function.h"
-#include "defaults.h"
 #include "toplev.h"
 #include "eh-common.h"
 
-rtx expand_builtin_return_addr	PROTO((enum built_in_function, int, rtx));
+rtx expand_builtin_return_addr	(enum built_in_function, int, rtx);
 
 /* Holds the fndecl for __builtin_return_address.  */
 tree builtin_return_address_fndecl;
 
 /* A couple of backend routines from m88k.c */
 
-static void push_eh_cleanup PROTO((void));
-static tree build_eh_type_type PROTO((tree));
-static tree build_eh_type PROTO((tree));
-static void expand_end_eh_spec PROTO((tree));
-static tree call_eh_info PROTO((void));
-static void push_eh_info PROTO((void));
-static tree get_eh_info PROTO((void));
-static tree get_eh_value PROTO((void));
+static void push_eh_cleanup (void);
+static tree build_eh_type_type (tree);
+static tree build_eh_type (tree);
+static void expand_end_eh_spec (tree);
+static tree call_eh_info (void);
+static void push_eh_info (void);
+static tree get_eh_info (void);
+static tree get_eh_value (void);
 #if 0
-static tree get_eh_type PROTO((void));
-static tree get_eh_caught PROTO((void));
-static tree get_eh_handlers PROTO((void));
+static tree get_eh_type (void);
+static tree get_eh_caught (void);
+static tree get_eh_handlers (void);
 #endif
-static tree do_pop_exception PROTO((void));
-static void process_start_catch_block PROTO((tree, tree));
-static tree build_eh_type_type_ref PROTO((tree));
-static tree build_terminate_handler PROTO((void));
-static tree alloc_eh_object PROTO((tree));
+static tree do_pop_exception (void);
+static void process_start_catch_block (tree, tree);
+static tree build_eh_type_type_ref (tree);
+static tree build_terminate_handler (void);
+static tree alloc_eh_object (tree);
 
 #if 0
 /* This is the startup, and finish stuff per exception table.  */
@@ -221,19 +220,19 @@ init_exception_processing ()
 							tree_cons (NULL_TREE, const_ptr_type_node,
 								   tree_cons (NULL_TREE, ptr_type_node,
 									      void_list_node)))),
-			NOT_BUILT_IN, NULL_PTR);
+			NOT_BUILT_IN, NULL);
   FirstExceptionMatch
     = builtin_function ("__find_first_exception_table_match",
 			build_function_type (ptr_type_node,
 					     tree_cons (NULL_TREE, ptr_type_node,
 							void_list_node)),
-			NOT_BUILT_IN, NULL_PTR);
+			NOT_BUILT_IN, NULL);
   Unwind
     = builtin_function ("__unwind_function",
 			build_function_type (void_type_node,
 					     tree_cons (NULL_TREE, ptr_type_node,
 							void_list_node)),
-			NOT_BUILT_IN, NULL_PTR);
+			NOT_BUILT_IN, NULL);
 
   pop_lang_context ();
 
@@ -349,7 +348,7 @@ get_eh_info ()
 {
   /* Look for the pointer pushed in push_eh_info.  */
   tree t = lookup_name (get_identifier ("__exception_info"), 0);
-  return build_indirect_ref (t, NULL_PTR);
+  return build_indirect_ref (t, NULL);
 }
 
 /* Returns a reference to the current exception object.  */
@@ -1039,7 +1038,7 @@ expand_throw (exp)
 
 	  expand_eh_region_start ();
 
-	  object = build_indirect_ref (ptr, NULL_PTR);
+	  object = build_indirect_ref (ptr, NULL);
 	  exp = build_modify_expr (object, INIT_EXPR, exp);
 
 	  if (exp == error_mark_node)

@@ -35,19 +35,19 @@ Boston, MA 02111-1307, USA.  */
 
 extern struct obstack permanent_obstack;
 
-static tree call_void_fn PROTO((char *));
-static tree build_headof_sub PROTO((tree));
-static tree build_headof PROTO((tree));
-static tree get_tinfo_var PROTO((tree));
-static tree ifnonnull PROTO((tree, tree));
-static tree build_dynamic_cast_1 PROTO((tree, tree));
-static void expand_si_desc PROTO((tree, tree));
-static void expand_class_desc PROTO((tree, tree));
-static void expand_attr_desc PROTO((tree, tree));
-static void expand_ptr_desc PROTO((tree, tree));
-static void expand_generic_desc PROTO((tree, tree, char *));
-static tree throw_bad_cast PROTO((void));
-static tree throw_bad_typeid PROTO((void));
+static tree call_void_fn (char *);
+static tree build_headof_sub (tree);
+static tree build_headof (tree);
+static tree get_tinfo_var (tree);
+static tree ifnonnull (tree, tree);
+static tree build_dynamic_cast_1 (tree, tree);
+static void expand_si_desc (tree, tree);
+static void expand_class_desc (tree, tree);
+static void expand_attr_desc (tree, tree);
+static void expand_ptr_desc (tree, tree);
+static void expand_generic_desc (tree, tree, char *);
+static tree throw_bad_cast (void);
+static tree throw_bad_typeid (void);
 
 tree type_info_type_node;
 tree tinfo_fn_id;
@@ -116,7 +116,7 @@ build_headof (exp)
   /* We use this a couple of times below, protect it.  */
   exp = save_expr (exp);
 
-  aref = build_vtbl_ref (build_indirect_ref (exp, NULL_PTR), integer_zero_node);
+  aref = build_vtbl_ref (build_indirect_ref (exp, NULL), integer_zero_node);
 
   if (flag_vtable_thunks)
     offset = aref;
@@ -222,7 +222,7 @@ get_tinfo_fn_dynamic (exp)
 	{
 	  exp = build_unary_op (ADDR_EXPR, exp, 0);
 	  exp = build_headof_sub (exp);
-	  exp = build_indirect_ref (exp, NULL_PTR);
+	  exp = build_indirect_ref (exp, NULL);
 	}
 
       if (flag_vtable_thunks)
@@ -612,7 +612,7 @@ build_dynamic_cast_1 (type, expr)
 	  expr2 = build_headof (expr1);
 
 	  if (ec == POINTER_TYPE)
-	    td1 = get_tinfo_fn_dynamic (build_indirect_ref (expr, NULL_PTR));
+	    td1 = get_tinfo_fn_dynamic (build_indirect_ref (expr, NULL));
 	  else
 	    td1 = get_tinfo_fn_dynamic (expr);
 	  td1 = decay_conversion (td1);

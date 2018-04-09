@@ -41,25 +41,25 @@ Boston, MA 02111-1307, USA.  */
 
 extern void compiler_error ();
 
-static tree convert_for_assignment PROTO((tree, tree, char*, tree,
-					  int));
-static tree pointer_int_sum PROTO((enum tree_code, tree, tree));
-static tree rationalize_conditional_expr PROTO((enum tree_code, tree));
-static int comp_target_parms PROTO((tree, tree, int));
-static int comp_ptr_ttypes_real PROTO((tree, tree, int));
-static int comp_ptr_ttypes_const PROTO((tree, tree));
-static int comp_ptr_ttypes_reinterpret PROTO((tree, tree));
-static int comp_array_types PROTO((int (*) (tree, tree, int), tree,
-				   tree, int));
-static tree build_ptrmemfunc1 PROTO((tree, tree, tree, tree, tree));
-static tree common_base_type PROTO((tree, tree));
+static tree convert_for_assignment (tree, tree, char*, tree,
+					  int);
+static tree pointer_int_sum (enum tree_code, tree, tree);
+static tree rationalize_conditional_expr (enum tree_code, tree);
+static int comp_target_parms (tree, tree, int);
+static int comp_ptr_ttypes_real (tree, tree, int);
+static int comp_ptr_ttypes_const (tree, tree);
+static int comp_ptr_ttypes_reinterpret (tree, tree);
+static int comp_array_types (int (*) (tree, tree, int), tree,
+				   tree, int);
+static tree build_ptrmemfunc1 (tree, tree, tree, tree, tree);
+static tree common_base_type (tree, tree);
 #if 0
-static tree convert_sequence PROTO((tree, tree));
+static tree convert_sequence (tree, tree);
 #endif
-static tree lookup_anon_field PROTO((tree, tree));
-static tree pointer_diff PROTO((tree, tree, tree));
-static tree qualify_type PROTO((tree, tree));
-static tree get_delta_difference PROTO((tree, tree, int));
+static tree lookup_anon_field (tree, tree);
+static tree pointer_diff (tree, tree, tree);
+static tree qualify_type (tree, tree);
+static tree get_delta_difference (tree, tree, int);
 
 /* Return the target type of TYPE, which meas return T for:
    T*, T&, T[], T (...), and otherwise, just T.  */
@@ -118,7 +118,7 @@ require_complete_type (value)
       my_friendly_assert (TREE_CODE (member) == FIELD_DECL, 305);
       base = convert_pointer_to (basetype, current_class_ptr);
       value = build (COMPONENT_REF, TREE_TYPE (member),
-		     build_indirect_ref (base, NULL_PTR), member);
+		     build_indirect_ref (base, NULL), member);
       return require_complete_type (value);
     }
 
@@ -638,7 +638,7 @@ compexcepttypes (t1, t2)
 
 static int
 comp_array_types (cmp, t1, t2, strict)
-     register int (*cmp) PROTO((tree, tree, int));
+     register int (*cmp) (tree, tree, int);
      tree t1, t2;
      int strict;
 {
@@ -2131,7 +2131,7 @@ build_component_ref (datum, component, basetype_path, protect)
 	    }
 	  else
 	    addr = convert_pointer_to (base, addr);
-	  datum = build_indirect_ref (addr, NULL_PTR);
+	  datum = build_indirect_ref (addr, NULL);
 	  my_friendly_assert (datum != error_mark_node, 311);
 	}
       basetype = base;
@@ -2755,7 +2755,7 @@ get_member_function_from_ptrfunc (instance_ptrptr, function)
 	    (PLUS_EXPR,
 	     build_pointer_type (build_pointer_type (vtable_entry_type)),
 	     vtbl, cp_convert (ptrdiff_type_node, delta2));
-	  vtbl = build_indirect_ref (vtbl, NULL_PTR);
+	  vtbl = build_indirect_ref (vtbl, NULL);
 	  aref = build_array_ref (vtbl, build_binary_op (MINUS_EXPR,
 							 idx,
 							 integer_one_node, 1));
@@ -3389,7 +3389,7 @@ build_binary_op_nodefault (code, orig_op0, orig_op1, error_code)
 		  if (TREE_INT_CST_LOW (op1) | TREE_INT_CST_HIGH (op1))
 		    short_shift = 1;
 		  if (TREE_INT_CST_HIGH (op1) != 0
-		      || ((unsigned HOST_WIDE_INT) TREE_INT_CST_LOW (op1)
+		      || ((HOST_WIDE_UINT) TREE_INT_CST_LOW (op1)
 			  >= TYPE_PRECISION (type0)))
 		    warning ("right shift count >= width of type");
 		}
@@ -3412,7 +3412,7 @@ build_binary_op_nodefault (code, orig_op0, orig_op1, error_code)
 	      if (tree_int_cst_lt (op1, integer_zero_node))
 		warning ("left shift count is negative");
 	      else if (TREE_INT_CST_HIGH (op1) != 0
-		       || ((unsigned HOST_WIDE_INT) TREE_INT_CST_LOW (op1)
+		       || ((HOST_WIDE_UINT) TREE_INT_CST_LOW (op1)
 			   >= TYPE_PRECISION (type0)))
 		warning ("left shift count >= width of type");
 	    }
@@ -3436,7 +3436,7 @@ build_binary_op_nodefault (code, orig_op0, orig_op1, error_code)
 		warning ("%s rotate count is negative",
 			 (code == LROTATE_EXPR) ? "left" : "right");
 	      else if (TREE_INT_CST_HIGH (op1) != 0
-		       || ((unsigned HOST_WIDE_INT) TREE_INT_CST_LOW (op1)
+		       || ((HOST_WIDE_UINT) TREE_INT_CST_LOW (op1)
 			   >= TYPE_PRECISION (type0)))
 		warning ("%s rotate count >= width of type",
 			 (code == LROTATE_EXPR) ? "left" : "right");
@@ -3896,7 +3896,7 @@ build_binary_op_nodefault (code, orig_op0, orig_op1, error_code)
 
 		  bits = TYPE_PRECISION (TREE_TYPE (primop));
 		  if (bits < TYPE_PRECISION (result_type)
-		      && bits < HOST_BITS_PER_LONG && unsignedp)
+		      && bits < HOST_BITS_PER_WIDE_INT && unsignedp)
 		    {
 		      mask = (~ (HOST_WIDE_INT) 0) << bits;
 		      if ((mask & constant) != mask)

@@ -30,18 +30,18 @@ Boston, MA 02111-1307, USA.  */
 
 extern void compiler_error ();
 
-static tree get_identifier_list PROTO((tree));
-static tree bot_manip PROTO((tree));
-static tree perm_manip PROTO((tree));
-static tree build_cplus_array_type_1 PROTO((tree, tree));
-static void list_hash_add PROTO((int, tree));
-static int list_hash PROTO((tree, tree, tree));
-static tree list_hash_lookup PROTO((int, int, int, int, tree, tree,
-				    tree));
-static void propagate_binfo_offsets PROTO((tree, tree));
-static int avoid_overlap PROTO((tree, tree));
-static int lvalue_p_1 PROTO((tree, int));
-static int equal_functions PROTO((tree, tree));
+static tree get_identifier_list (tree);
+static tree bot_manip (tree);
+static tree perm_manip (tree);
+static tree build_cplus_array_type_1 (tree, tree);
+static void list_hash_add (int, tree);
+static int list_hash (tree, tree, tree);
+static tree list_hash_lookup (int, int, int, int, tree, tree,
+				    tree);
+static void propagate_binfo_offsets (tree, tree);
+static int avoid_overlap (tree, tree);
+static int lvalue_p_1 (tree, int);
+static int equal_functions (tree, tree);
 
 #define CEIL(x,y) (((x) + (y) - 1) / (y))
 
@@ -1226,7 +1226,7 @@ void
 debug_binfo (elem)
      tree elem;
 {
-  unsigned HOST_WIDE_INT n;
+  HOST_WIDE_UINT n;
   tree virtuals;
 
   fprintf (stderr, "type \"%s\"; offset = %ld\n",
@@ -1565,7 +1565,7 @@ copy_template_template_parm (t)
 tree
 search_tree (t, func)
      tree t;
-     tree (*func) PROTO((tree));
+     tree (*func) (tree);
 {
 #define TRY(ARG) if (tmp=search_tree (ARG, func), tmp != NULL_TREE) return tmp
 
@@ -1818,7 +1818,7 @@ no_linkage_check (t)
 tree
 mapcar (t, func)
      tree t;
-     tree (*func) PROTO((tree));
+     tree (*func) (tree);
 {
   tree tmp;
 
@@ -2083,7 +2083,7 @@ perm_manip (t)
 
       /* copy_rtx won't make a new SYMBOL_REF, so call make_decl_rtl again.  */
       DECL_RTL (t) = 0;
-      make_decl_rtl (t, NULL_PTR, 1);
+      make_decl_rtl (t, NULL, 1);
 
       return t;
     }
@@ -2110,10 +2110,6 @@ copy_to_permanent (t)
   return t;
 }
 
-#ifdef GATHER_STATISTICS
-extern int depth_reached;
-#endif
-
 void
 print_lang_statistics ()
 {
@@ -2122,10 +2118,6 @@ print_lang_statistics ()
   print_obstack_statistics ("decl_obstack", &decl_obstack);
   print_search_statistics ();
   print_class_statistics ();
-#ifdef GATHER_STATISTICS
-  fprintf (stderr, "maximum template instantiation depth reached: %d\n",
-	   depth_reached);
-#endif
 }
 
 /* This is used by the `assert' macro.  It is provided in libgcc.a,
@@ -2134,18 +2126,7 @@ print_lang_statistics ()
    my_friendly_assert).  But all of the back-end files still need this.  */
 
 void
-__eprintf (string, expression, line, filename)
-#ifdef __STDC__
-     const char *string;
-     const char *expression;
-     unsigned line;
-     const char *filename;
-#else
-     char *string;
-     char *expression;
-     unsigned line;
-     char *filename;
-#endif
+__eprintf (const char *string, const char *expression, unsigned line, const char *filename)
 {
   fprintf (stderr, string, expression, line, filename);
   fflush (stderr);
@@ -2226,22 +2207,15 @@ break_out_target_exprs (t)
    on the permanent_obstack, regardless.  */
 
 tree
-build_min_nt VPROTO((enum tree_code code, ...))
+build_min_nt (enum tree_code code, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  enum tree_code code;
-#endif
   register struct obstack *ambient_obstack = expression_obstack;
   va_list p;
   register tree t;
   register int length;
   register int i;
 
-  VA_START (p, code);
-
-#ifndef ANSI_PROTOTYPES
-  code = va_arg (p, enum tree_code);
-#endif
+  va_start (p, code);
 
   expression_obstack = &permanent_obstack;
 
@@ -2264,24 +2238,15 @@ build_min_nt VPROTO((enum tree_code code, ...))
    on the permanent_obstack, regardless.  */
 
 tree
-build_min VPROTO((enum tree_code code, tree tt, ...))
+build_min (enum tree_code code, tree tt, ...)
 {
-#ifndef ANSI_PROTOTYPES
-  enum tree_code code;
-  tree tt;
-#endif
   register struct obstack *ambient_obstack = expression_obstack;
   va_list p;
   register tree t;
   register int length;
   register int i;
 
-  VA_START (p, tt);
-
-#ifndef ANSI_PROTOTYPES
-  code = va_arg (p, enum tree_code);
-  tt = va_arg (p, tree);
-#endif
+  va_start (p, tt);
 
   expression_obstack = &permanent_obstack;
 
@@ -2686,7 +2651,7 @@ build_dummy_object (type)
      tree type;
 {
   tree decl = build1 (NOP_EXPR, build_pointer_type (type), error_mark_node);
-  return build_indirect_ref (decl, NULL_PTR);
+  return build_indirect_ref (decl, NULL);
 }
 
 /* We've gotten a reference to a member of TYPE.  Return *this if appropriate,

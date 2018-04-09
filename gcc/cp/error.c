@@ -88,24 +88,24 @@ static char *scratch_firstobj;
 
 enum pad { none, before, after };
 
-static void dump_type PROTO((tree, int));
-static void dump_type_real PROTO((tree, int, int));
-static void dump_simple_decl PROTO((tree, tree, int));
-static void dump_decl PROTO((tree, int));
-static void dump_function_decl PROTO((tree, int));
-static void dump_expr PROTO((tree, int));
-static void dump_unary_op PROTO((char *, tree, int));
-static void dump_binary_op PROTO((char *, tree));
-static void dump_aggr_type PROTO((tree, int, int));
-static void dump_type_prefix PROTO((tree, int, int));
-static void dump_type_suffix PROTO((tree, int, int));
-static void dump_function_name PROTO((tree));
-static void dump_expr_list PROTO((tree));
-static void dump_global_iord PROTO((tree));
-static void dump_qualifiers PROTO((tree, enum pad));
-static void dump_char PROTO((int));
-static char *aggr_variety PROTO((tree));
-static tree ident_fndecl PROTO((tree));
+static void dump_type (tree, int);
+static void dump_type_real (tree, int, int);
+static void dump_simple_decl (tree, tree, int);
+static void dump_decl (tree, int);
+static void dump_function_decl (tree, int);
+static void dump_expr (tree, int);
+static void dump_unary_op (char *, tree, int);
+static void dump_binary_op (char *, tree);
+static void dump_aggr_type (tree, int, int);
+static void dump_type_prefix (tree, int, int);
+static void dump_type_suffix (tree, int, int);
+static void dump_function_name (tree);
+static void dump_expr_list (tree);
+static void dump_global_iord (tree);
+static void dump_qualifiers (tree, enum pad);
+static void dump_char (int);
+static char *aggr_variety (tree);
+static tree ident_fndecl (tree);
 
 void
 init_error ()
@@ -1584,7 +1584,7 @@ dump_expr (t, nop)
 	      && TREE_INT_CST_HIGH (idx) == 0)
 	    {
 	      tree virtuals;
-	      unsigned HOST_WIDE_INT n;
+	      HOST_WIDE_UINT n;
 
 	      t = TREE_TYPE (TYPE_PTRMEMFUNC_FN_TYPE (TREE_TYPE (t)));
 	      t = TYPE_METHOD_BASETYPE (t);
